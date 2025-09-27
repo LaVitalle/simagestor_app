@@ -27,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
       debugPrint("Empresa: $company");
 
       // Exemplo: navegação se válido
-      // Navigator.pushNamed(context, '/home');
+      Navigator.pushNamed(context, '/home');
     }
   }
 
