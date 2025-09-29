@@ -23,7 +23,7 @@ class ServiceLocalDatabase {
   Future _createDB(Database db, int version) async {
     await db.execute('''
       CREATE TABLE configuracoes (
-        id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_usuario INTEGER PRIMARY KEY,
         url_empresa TEXT NOT NULL,
         data_expiracao TEXT NOT NULL
       )
