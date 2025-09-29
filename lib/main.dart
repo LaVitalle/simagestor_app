@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:simagestor_app/screens/login_page.dart';
 import 'package:simagestor_app/screens/home_page.dart';
 import 'package:simagestor_app/screens/despesas_page.dart';
+import 'package:simagestor_app/screens/form_despesas_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,6 +23,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => const LoginPage(),
         '/home': (context) => const HomePage(),
         '/despesas': (context) => const DespesasPage(),
+        '/form-despesas': (context) => const FormDespesasPage(),
       },
     );
   }

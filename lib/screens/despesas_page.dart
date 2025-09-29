@@ -78,13 +78,10 @@ class _DespesasPageState extends State<DespesasPage> {
   }
 
   void _novaDespesa() {
-    // TODO: Implementar navegação para tela de nova despesa
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Abrir tela de nova despesa'),
-        backgroundColor: AppColors.primary,
-      ),
-    );
+    Navigator.pushNamed(context, '/form-despesas').then((_) {
+      // Recarregar a lista quando retornar da tela de formulário
+      _carregarDespesas();
+    });
   }
 
   @override

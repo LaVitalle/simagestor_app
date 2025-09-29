@@ -5,6 +5,7 @@ class Despesa {
   final DateTime dataHora;
   final bool recorrente;
   final String tipoDespesa;
+  final String placaVeiculo;
   final int configuracoesIdUsuario;
 
   Despesa({
@@ -14,6 +15,7 @@ class Despesa {
     required this.dataHora,
     required this.recorrente,
     required this.tipoDespesa,
+    required this.placaVeiculo,
     required this.configuracoesIdUsuario,
   });
 
@@ -25,6 +27,7 @@ class Despesa {
       dataHora: DateTime.parse(json['data_hora'] as String),
       recorrente: json['recorrente'] == 1,
       tipoDespesa: json['tipo_despesa'] as String? ?? '',
+      placaVeiculo: json['placa_veiculo'] as String? ?? '',
       configuracoesIdUsuario: json['configurações_id_usuario'] as int,
     );
   }
@@ -37,6 +40,7 @@ class Despesa {
       'data_hora': dataHora.toIso8601String(),
       'recorrente': recorrente ? 1 : 0,
       'tipo_despesa': tipoDespesa,
+      'placa_veiculo': placaVeiculo,
       'configurações_id_usuario': configuracoesIdUsuario,
     };
   }
@@ -55,6 +59,6 @@ class Despesa {
 
   @override
   String toString() {
-    return 'Despesa{idDespesa: $idDespesa, valor: $valor, observacao: $observacao, dataHora: $dataHora, recorrente: $recorrente, tipoDespesa: $tipoDespesa, configuracoesIdUsuario: $configuracoesIdUsuario}';
+    return 'Despesa{idDespesa: $idDespesa, valor: $valor, observacao: $observacao, dataHora: $dataHora, recorrente: $recorrente, tipoDespesa: $tipoDespesa, placaVeiculo: $placaVeiculo, configuracoesIdUsuario: $configuracoesIdUsuario}';
   }
 }
