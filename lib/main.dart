@@ -3,6 +3,7 @@ import 'package:simagestor_app/screens/login_page.dart';
 import 'package:simagestor_app/screens/home_page.dart';
 import 'package:simagestor_app/screens/despesas_page.dart';
 import 'package:simagestor_app/screens/form_despesas_page.dart';
+import 'package:simagestor_app/screens/detalhes_despesa_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -24,6 +25,13 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomePage(),
         '/despesas': (context) => const DespesasPage(),
         '/form-despesas': (context) => const FormDespesasPage(),
+        '/detalhes-despesa': (context) {
+          final args =
+              ModalRoute.of(context)?.settings.arguments
+                  as Map<String, dynamic>?;
+          final idDespesa = args?['idDespesa'] as int? ?? 0;
+          return DetalhesDespesaPage(idDespesa: idDespesa);
+        },
       },
     );
   }
