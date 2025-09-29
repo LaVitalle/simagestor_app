@@ -68,8 +68,6 @@ class ServiceApi {
 
   Future<T> postFormData<T>(String path, Map<String, dynamic> fields) async {
     final formData = FormData.fromMap(fields);
-    final pathR = _buildPath(path);
-    print(pathR);
 
     final response = await _dio.post<T>(
       _buildPath(path),
