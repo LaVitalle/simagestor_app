@@ -16,7 +16,7 @@ class _HomePageState extends State<HomePage> {
 
   void handleDespesas() {
     debugPrint("Navegar para Controle de Despesas");
-    // Exemplo: Navigator.pushNamed(context, '/despesas');
+    Navigator.pushNamed(context, '/despesas');
   }
 
   void handleChecklist() {
