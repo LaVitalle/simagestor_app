@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:simagestor_app/screens/login_page.dart';
 import 'package:simagestor_app/screens/home_page.dart';
-import 'package:simagestor_app/screens/despesas_page.dart';
-import 'package:simagestor_app/screens/form_despesas_page.dart';
-import 'package:simagestor_app/screens/detalhes_despesa_page.dart';
+import 'package:simagestor_app/screens/despesa/despesas_page.dart';
+import 'package:simagestor_app/screens/despesa/form_despesas_page.dart';
+import 'package:simagestor_app/screens/despesa/detalhes_despesa_page.dart';
 
 void main() {
   runApp(const MyApp());
