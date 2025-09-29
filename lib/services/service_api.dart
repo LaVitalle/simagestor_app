@@ -4,7 +4,7 @@ class ServiceApi {
   static final ServiceApi _instance = ServiceApi._internal();
 
   String token = "";
-  Dio _dio = Dio();
+  final Dio _dio = Dio();
   late String url;
 
 
