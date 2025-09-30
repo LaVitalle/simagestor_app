@@ -1,9 +1,14 @@
+import 'package:simagestor_app/enum/model_enum.dart';
+import 'package:simagestor_app/services/service_api.dart';
+import 'package:simagestor_app/services/service_connection.dart';
+import 'package:simagestor_app/services/service_sync.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class ServiceLocalDatabase {
   static final ServiceLocalDatabase instance = ServiceLocalDatabase._init();
   static Database? _database;
+  static final ServiceSync _serviceSync = new ServiceSync(); 
 
   ServiceLocalDatabase._init();
 
@@ -81,6 +86,28 @@ class ServiceLocalDatabase {
     ''');
   }
 
+  Future<bool> insertApiData(Model model, Map<String, dynamic> data) async {
+    try {
+      var hasInternet = await ServiceConnection.hasInternetConnection();
+
+      if(hasInternet) {
+        if(_serviceSync.hasSomeAsyncedModel()) {
+          await _serviceSync.syncAllModel();
+          return true;
+        } else {
+          await ServiceApi().postFormDataWithAuth(model.api, data);
+          return true;
+        }
+      } else {
+        _serviceSync.syncedModel[model] = false;
+        return false;
+      }
+    } catch (_) {
+      _serviceSync.syncedModel[model] = false;
+      return false;
+    }
+  }
+
   // Métodos para Configurações
   Future<int> insertConfiguracao(Map<String, dynamic> configuracao) async {
     try {
@@ -150,6 +177,8 @@ class ServiceLocalDatabase {
   Future<int> insertChecklist(Map<String, dynamic> checklist) async {
     try {
       final db = await instance.database;
+      var asynced = await insertApiData(Model.checklist, checklist);
+      checklist['sync'] = asynced;
       return await db.insert('checklist', checklist);
     } catch (e) {
       print('Erro ao inserir checklist: $e');
@@ -229,6 +258,8 @@ class ServiceLocalDatabase {
   Future<int> insertDespesa(Map<String, dynamic> despesa) async {
     try {
       final db = await instance.database;
+      var asynced = await insertApiData(Model.despesa, despesa);
+      despesa['sync'] = asynced;
       return await db.insert('despesa', despesa);
     } catch (e) {
       print('Erro ao inserir despesa: $e');
@@ -322,6 +353,8 @@ class ServiceLocalDatabase {
   Future<int> insertAbastecimento(Map<String, dynamic> abastecimento) async {
     try {
       final db = await instance.database;
+      var asynced = await insertApiData(Model.combustivel, abastecimento);
+      abastecimento['sync'] = asynced;
       return await db.insert('abastecimento', abastecimento);
     } catch (e) {
       print('Erro ao inserir abastecimento: $e');
