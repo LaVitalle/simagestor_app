@@ -68,23 +68,18 @@ class _DespesasPageState extends State<DespesasPage> {
   }
 
   void _visualizarDespesa(Despesa despesa) {
-    // TODO: Implementar navegação para tela de detalhes da despesa
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Visualizar despesa ${despesa.idFormatado}'),
-        backgroundColor: AppColors.primary,
-      ),
+    Navigator.pushNamed(
+      context,
+      '/detalhes-despesa',
+      arguments: {'idDespesa': despesa.idDespesa},
     );
   }
 
   void _novaDespesa() {
-    // TODO: Implementar navegação para tela de nova despesa
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Abrir tela de nova despesa'),
-        backgroundColor: AppColors.primary,
-      ),
-    );
+    Navigator.pushNamed(context, '/form-despesas').then((_) {
+      // Recarregar a lista quando retornar da tela de formulário
+      _carregarDespesas();
+    });
   }
 
   @override

@@ -10,6 +10,7 @@ class DespesaService {
       dataHora: DateTime(2025, 1, 15, 12, 30),
       recorrente: false,
       tipoDespesa: 'Alimentação',
+      placaVeiculo: 'ABC-1234',
       configuracoesIdUsuario: 1,
     ),
     Despesa(
@@ -19,6 +20,7 @@ class DespesaService {
       dataHora: DateTime(2025, 1, 14, 18, 45),
       recorrente: false,
       tipoDespesa: 'Transporte',
+      placaVeiculo: 'DEF-5678',
       configuracoesIdUsuario: 1,
     ),
     Despesa(
@@ -28,6 +30,7 @@ class DespesaService {
       dataHora: DateTime(2025, 1, 13, 16, 20),
       recorrente: true,
       tipoDespesa: 'Saúde',
+      placaVeiculo: 'GHI-9012',
       configuracoesIdUsuario: 1,
     ),
     Despesa(
@@ -37,6 +40,7 @@ class DespesaService {
       dataHora: DateTime(2025, 1, 12, 15, 10),
       recorrente: false,
       tipoDespesa: 'Alimentação',
+      placaVeiculo: 'JKL-3456',
       configuracoesIdUsuario: 1,
     ),
     Despesa(
@@ -46,6 +50,7 @@ class DespesaService {
       dataHora: DateTime(2025, 1, 11, 9, 0),
       recorrente: true,
       tipoDespesa: 'Utilidades',
+      placaVeiculo: 'MNO-7890',
       configuracoesIdUsuario: 1,
     ),
     Despesa(
@@ -55,6 +60,7 @@ class DespesaService {
       dataHora: DateTime(2025, 1, 10, 6, 30),
       recorrente: false,
       tipoDespesa: 'Transporte',
+      placaVeiculo: 'PQR-1234',
       configuracoesIdUsuario: 1,
     ),
     Despesa(
@@ -64,6 +70,7 @@ class DespesaService {
       dataHora: DateTime(2025, 1, 9, 19, 15),
       recorrente: true,
       tipoDespesa: 'Alimentação',
+      placaVeiculo: 'STU-5678',
       configuracoesIdUsuario: 1,
     ),
     Despesa(
@@ -73,6 +80,7 @@ class DespesaService {
       dataHora: DateTime(2025, 1, 8, 14, 0),
       recorrente: false,
       tipoDespesa: 'Saúde',
+      placaVeiculo: 'VWX-9012',
       configuracoesIdUsuario: 1,
     ),
     Despesa(
@@ -82,6 +90,7 @@ class DespesaService {
       dataHora: DateTime(2025, 1, 7, 20, 30),
       recorrente: false,
       tipoDespesa: 'Entretenimento',
+      placaVeiculo: 'YZA-3456',
       configuracoesIdUsuario: 1,
     ),
     Despesa(
@@ -91,6 +100,7 @@ class DespesaService {
       dataHora: DateTime(2025, 1, 6, 10, 0),
       recorrente: true,
       tipoDespesa: 'Utilidades',
+      placaVeiculo: 'BCD-7890',
       configuracoesIdUsuario: 1,
     ),
   ];
@@ -136,6 +146,7 @@ class DespesaService {
       dataHora: novaDespesa.dataHora,
       recorrente: novaDespesa.recorrente,
       tipoDespesa: novaDespesa.tipoDespesa,
+      placaVeiculo: novaDespesa.placaVeiculo,
       configuracoesIdUsuario: novaDespesa.configuracoesIdUsuario,
     );
 
