@@ -25,7 +25,8 @@ class ServiceLocalDatabase {
       CREATE TABLE configuracoes (
         id_usuario INTEGER PRIMARY KEY,
         url_empresa TEXT NOT NULL,
-        data_expiracao TEXT NOT NULL
+        data_expiracao TEXT NOT NULL,
+        token TEXT NOT NULL
       )
     ''');
 
