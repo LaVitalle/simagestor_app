@@ -13,6 +13,8 @@ class _LoginPageState extends State<LoginPage> {
   final _loginService = LoginService();
   final _formKey = GlobalKey<FormState>();
 
+  String _message = '';
+
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController companyController = TextEditingController();
@@ -25,8 +27,11 @@ class _LoginPageState extends State<LoginPage> {
 
       Map<String, dynamic> loginData = await _loginService.authUser(email, password, company);
       String? token = loginData['data']['token'];
-      String? userId = loginData['data']['user_id'];
-      String? message = loginData['message'];
+      dynamic userId = loginData['data']['user_id'];
+
+      setState(() {
+        _message = loginData['message'];
+      });
 
       if (token != null && token.isNotEmpty) {
         debugPrint("Token recebido: $token");
@@ -101,7 +106,8 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                )
+                ),
+                Text(_message, style: TextStyle(color: AppColors.text))
               ],
             ),
           ),
