@@ -25,12 +25,15 @@ class ServiceLocalDatabase {
     return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
+
   Future _createDB(Database db, int version) async {
     await db.execute('''
       CREATE TABLE configuracoes (
         id_usuario INTEGER PRIMARY KEY,
         url_empresa TEXT NOT NULL,
-        data_expiracao TEXT NOT NULL
+        data_expiracao TEXT NOT NULL,
+        token TEXT NOT NULL,
+        isAdmin BOOLEAN NOT NULL
       )
     ''');
 
@@ -39,18 +42,18 @@ class ServiceLocalDatabase {
         id_checklist INTEGER PRIMARY KEY AUTOINCREMENT,
         placa_veiculo TEXT NOT NULL,
         motorista TEXT NOT NULL,
-        freios INTEGER,
-        pneus INTEGER,
-        nivel_oleo INTEGER,
-        farois_lanterna INTEGER,
-        documentacao_veiculo INTEGER,
-        CNH_motorista INTEGER,
-        limpadores_parabrisa INTEGER,
-        cintos_de_seguranca INTEGER,
-        fluido_de_arrefecimento INTEGER,
-        suspensao INTEGER,
+        freios TEXT CHECK (freios IN ('ok', 'not_ok')),
+        pneus TEXT CHECK (pneus IN ('ok', 'not_ok')),
+        nivel_oleo TEXT CHECK (nivel_oleo IN ('ok', 'not_ok')),
+        farois_lanterna TEXT CHECK (farois_lanterna IN ('ok', 'not_ok')),
+        documentacao_veiculo TEXT CHECK (documentacao_veiculo IN ('ok', 'not_ok')),
+        CNH_motorista TEXT CHECK (CNH_motorista IN ('ok', 'not_ok')),
+        limpadores_parabrisa TEXT CHECK (limpadores_parabrisa IN ('ok', 'not_ok')),
+        cintos_de_seguranca TEXT CHECK (cintos_de_seguranca IN ('ok', 'not_ok')),
+        fluido_de_arrefecimento TEXT CHECK (fluido_de_arrefecimento IN ('ok', 'not_ok')),
+        suspensao TEXT CHECK (suspensao IN ('ok', 'not_ok')),
         campo_assinatura TEXT,
-        sync BOOLEAN,
+        sync BOOLEAN NOT NULL,
         configuracoes_id_usuario INTEGER,
         FOREIGN KEY (configuracoes_id_usuario) REFERENCES configuracoes (id_usuario)
       )
@@ -65,7 +68,7 @@ class ServiceLocalDatabase {
         recorrente INTEGER,
         tipo_despesa TEXT,
         configuracoes_id_usuario INTEGER,
-        sync BOOLEAN,
+        sync BOOLEAN NOT NULL,
         FOREIGN KEY (configuracoes_id_usuario) REFERENCES configuracoes (id_usuario)
       )
     ''');
@@ -79,7 +82,7 @@ class ServiceLocalDatabase {
         valor_por_litro REAL,
         litros_abastecidos REAL,
         total_RS REAL,
-        sync BOOLEAN,
+        sync BOOLEAN NOT NULL,
         configuracoes_id_usuario INTEGER,
         FOREIGN KEY (configuracoes_id_usuario) REFERENCES configuracoes (id_usuario)
       )
@@ -173,7 +176,6 @@ class ServiceLocalDatabase {
     }
   }
 
-  // Métodos para Checklist
   Future<int> insertChecklist(Map<String, dynamic> checklist) async {
     try {
       final db = await instance.database;

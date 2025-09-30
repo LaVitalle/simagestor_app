@@ -68,12 +68,10 @@ class _DespesasPageState extends State<DespesasPage> {
   }
 
   void _visualizarDespesa(Despesa despesa) {
-    // TODO: Implementar navegação para tela de detalhes da despesa
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Visualizar despesa ${despesa.idFormatado}'),
-        backgroundColor: AppColors.primary,
-      ),
+    Navigator.pushNamed(
+      context,
+      '/detalhes-despesa',
+      arguments: {'idDespesa': despesa.idDespesa},
     );
   }
 
