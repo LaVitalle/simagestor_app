@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:simagestor_app/services/login_service.dart';
 import 'package:simagestor_app/themes/app_colors.dart';
 
 class LoginPage extends StatefulWidget {
@@ -9,25 +10,29 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _loginService = LoginService();
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController companyController = TextEditingController();
 
-  void handleLogin() {
+  Future<void> handleLogin() async {
     if (_formKey.currentState!.validate()) {
       String email = emailController.text.trim();
       String password = passwordController.text.trim();
       String company = companyController.text.trim();
 
-      // Aqui entra a lógica de autenticação
-      debugPrint("Email: $email");
-      debugPrint("Senha: $password");
-      debugPrint("Empresa: $company");
+      Map<String, dynamic> loginData = await _loginService.authUser(email, password, company);
+      String? token = loginData['data']['token'];
+      String? userId = loginData['data']['user_id'];
+      String? message = loginData['message'];
 
-      // Exemplo: navegação se válido
-      Navigator.pushNamed(context, '/home');
+      if (token != null && token.isNotEmpty) {
+        debugPrint("Token recebido: $token");
+      } else {
+        debugPrint("Falha ao obter token");
+      }
     }
   }
 
@@ -66,9 +71,6 @@ class _LoginPageState extends State<LoginPage> {
                 _buildTextField("Senha", true, passwordController, (value) {
                   if (value == null || value.isEmpty) {
                     return "Digite sua senha";
-                  }
-                  if (value.length < 6) {
-                    return "Senha deve ter ao menos 6 caracteres";
                   }
                   return null;
                 }),
