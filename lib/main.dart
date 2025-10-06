@@ -5,6 +5,9 @@ import 'package:simagestor_app/screens/fuel_pages/fuel_page.dart';
 import 'package:simagestor_app/screens/fuel_pages/new_fueling_page.dart';
 import 'package:simagestor_app/screens/fuel_pages/fuel_detail_page.dart';
 import 'package:simagestor_app/models/fuel.dart';
+import 'package:simagestor_app/screens/despesa/despesas_page.dart';
+import 'package:simagestor_app/screens/despesa/form_despesas_page.dart';
+import 'package:simagestor_app/screens/despesa/detalhes_despesa_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,6 +32,15 @@ class MyApp extends StatelessWidget {
         '/fuel-detail': (context) {
           final fuelRecord = ModalRoute.of(context)!.settings.arguments as FuelModel;
           return FuelDetailPage(fuelRecord: fuelRecord);
+        },
+        '/despesas': (context) => const DespesasPage(),
+        '/form-despesas': (context) => const FormDespesasPage(),
+        '/detalhes-despesa': (context) {
+          final args =
+              ModalRoute.of(context)?.settings.arguments
+                  as Map<String, dynamic>?;
+          final idDespesa = args?['idDespesa'] as int? ?? 0;
+          return DetalhesDespesaPage(idDespesa: idDespesa);
         },
       },
     );
