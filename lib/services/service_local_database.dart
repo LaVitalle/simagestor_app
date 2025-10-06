@@ -63,6 +63,7 @@ class ServiceLocalDatabase {
       CREATE TABLE despesa (
         id_despesa INTEGER PRIMARY KEY AUTOINCREMENT,
         valor REAL NOT NULL,
+        placa TEXT NOT NULL,
         observacao TEXT,
         data_hora TEXT NOT NULL,
         recorrente INTEGER,

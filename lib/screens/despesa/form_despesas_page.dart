@@ -23,16 +23,16 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
   bool _isLoading = false;
 
   final List<String> _tiposDespesa = [
-    'pedágio',
-    'estacionamento',
-    'conserto de pneu',
-    'manutenção não programada',
-    'despesas de viagem',
-    'rastreamento',
-    'aluguel de veículo',
-    'salário',
-    'financiamento',
-    'outros',
+    'Pedágio',
+    'Estacionamento',
+    'Conserto de pneu',
+    'Manutenção não programada',
+    'Despesas de viagem',
+    'Rastreamento',
+    'Aluguel de veículo',
+    'Salário',
+    'Financiamento',
+    'Outros',
   ];
 
   final List<String> _opcoesRecorrente = ['Sim', 'Não'];
@@ -147,11 +147,11 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
       final novaDespesa = Despesa(
         idDespesa: 0, // Será gerado pelo serviço
         valor: double.parse(_valorController.text.replaceAll(',', '.')),
+        placa: _placaController.text.trim(),
         observacao: _observacaoController.text.trim(),
         dataHora: DateTime.now(), // Usar data atual por enquanto
         recorrente: _recorrenteSelecionado == 'Sim',
         tipoDespesa: _tipoDespesaSelecionado!,
-        placaVeiculo: _placaController.text.trim(),
         configuracoesIdUsuario: 1, // ID do usuário atual (mockado)
       );
 

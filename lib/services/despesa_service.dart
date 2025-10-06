@@ -1,183 +1,222 @@
 import 'package:simagestor_app/models/despesa.dart';
+import 'package:simagestor_app/services/service_local_database.dart';
 
 class DespesaService {
-  // Dados mockados para demonstração
-  static final List<Despesa> _despesasMockadas = [
-    Despesa(
-      idDespesa: 195123456,
-      valor: 25.50,
-      observacao: 'Almoço no restaurante',
-      dataHora: DateTime(2025, 1, 15, 12, 30),
-      recorrente: false,
-      tipoDespesa: 'Alimentação',
-      placaVeiculo: 'ABC-1234',
-      configuracoesIdUsuario: 1,
-    ),
-    Despesa(
-      idDespesa: 195123457,
-      valor: 150.00,
-      observacao: 'Combustível para viagem',
-      dataHora: DateTime(2025, 1, 14, 18, 45),
-      recorrente: false,
-      tipoDespesa: 'Transporte',
-      placaVeiculo: 'DEF-5678',
-      configuracoesIdUsuario: 1,
-    ),
-    Despesa(
-      idDespesa: 195123458,
-      valor: 89.90,
-      observacao: 'Medicamentos na farmácia',
-      dataHora: DateTime(2025, 1, 13, 16, 20),
-      recorrente: true,
-      tipoDespesa: 'Saúde',
-      placaVeiculo: 'GHI-9012',
-      configuracoesIdUsuario: 1,
-    ),
-    Despesa(
-      idDespesa: 195123459,
-      valor: 45.00,
-      observacao: 'Lanche da tarde',
-      dataHora: DateTime(2025, 1, 12, 15, 10),
-      recorrente: false,
-      tipoDespesa: 'Alimentação',
-      placaVeiculo: 'JKL-3456',
-      configuracoesIdUsuario: 1,
-    ),
-    Despesa(
-      idDespesa: 195123460,
-      valor: 200.00,
-      observacao: 'Conta de luz do mês',
-      dataHora: DateTime(2025, 1, 11, 9, 0),
-      recorrente: true,
-      tipoDespesa: 'Utilidades',
-      placaVeiculo: 'MNO-7890',
-      configuracoesIdUsuario: 1,
-    ),
-    Despesa(
-      idDespesa: 195123461,
-      valor: 75.30,
-      observacao: 'Taxi para o aeroporto',
-      dataHora: DateTime(2025, 1, 10, 6, 30),
-      recorrente: false,
-      tipoDespesa: 'Transporte',
-      placaVeiculo: 'PQR-1234',
-      configuracoesIdUsuario: 1,
-    ),
-    Despesa(
-      idDespesa: 195123462,
-      valor: 320.00,
-      observacao: 'Compras no supermercado',
-      dataHora: DateTime(2025, 1, 9, 19, 15),
-      recorrente: true,
-      tipoDespesa: 'Alimentação',
-      placaVeiculo: 'STU-5678',
-      configuracoesIdUsuario: 1,
-    ),
-    Despesa(
-      idDespesa: 195123463,
-      valor: 120.00,
-      observacao: 'Consulta médica',
-      dataHora: DateTime(2025, 1, 8, 14, 0),
-      recorrente: false,
-      tipoDespesa: 'Saúde',
-      placaVeiculo: 'VWX-9012',
-      configuracoesIdUsuario: 1,
-    ),
-    Despesa(
-      idDespesa: 195123464,
-      valor: 65.00,
-      observacao: 'Cinema com amigos',
-      dataHora: DateTime(2025, 1, 7, 20, 30),
-      recorrente: false,
-      tipoDespesa: 'Entretenimento',
-      placaVeiculo: 'YZA-3456',
-      configuracoesIdUsuario: 1,
-    ),
-    Despesa(
-      idDespesa: 195123465,
-      valor: 180.00,
-      observacao: 'Conta de internet',
-      dataHora: DateTime(2025, 1, 6, 10, 0),
-      recorrente: true,
-      tipoDespesa: 'Utilidades',
-      placaVeiculo: 'BCD-7890',
-      configuracoesIdUsuario: 1,
-    ),
-  ];
+  static final ServiceLocalDatabase _db = ServiceLocalDatabase.instance;
 
   static Future<List<Despesa>> buscarDespesas() async {
-    // Simula delay de rede
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Simula possível erro (descomente para testar)
-    // if (DateTime.now().millisecond % 10 == 0) {
-    //   throw Exception('Erro simulado na rede');
-    // }
-
-    // Retorna os dados mockados
-    return List.from(_despesasMockadas);
+    try {
+      final List<Map<String, dynamic>> results = await _db.getAllDespesas();
+      return results.map((json) => Despesa.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Erro ao buscar despesas: $e');
+    }
   }
 
   static Future<Despesa> buscarDespesaPorId(int id) async {
-    // Simula delay de rede
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // Busca a despesa pelos dados mockados
-    final despesa = _despesasMockadas.firstWhere(
-      (d) => d.idDespesa == id,
-      orElse: () => throw Exception('Despesa não encontrada'),
-    );
-
-    return despesa;
+    try {
+      final Map<String, dynamic>? result = await _db.getDespesaById(id);
+      if (result == null) {
+        throw Exception('Despesa não encontrada');
+      }
+      return Despesa.fromJson(result);
+    } catch (e) {
+      throw Exception('Erro ao buscar despesa por ID $id: $e');
+    }
   }
 
-  // Método para adicionar nova despesa aos dados mockados
   static Future<Despesa> adicionarDespesa(Despesa novaDespesa) async {
-    await Future.delayed(const Duration(milliseconds: 800));
+    try {
+      final data = novaDespesa.toJson();
+      // Remove o id_despesa se for 0 (novo registro)
+      if (data['id_despesa'] == 0) {
+        data.remove('id_despesa');
+      }
 
-    // Gera um novo ID baseado no último ID + 1
-    final ultimoId = _despesasMockadas
-        .map((d) => d.idDespesa)
-        .reduce((a, b) => a > b ? a : b);
-    final novaDespesaComId = Despesa(
-      idDespesa: ultimoId + 1,
-      valor: novaDespesa.valor,
-      observacao: novaDespesa.observacao,
-      dataHora: novaDespesa.dataHora,
-      recorrente: novaDespesa.recorrente,
-      tipoDespesa: novaDespesa.tipoDespesa,
-      placaVeiculo: novaDespesa.placaVeiculo,
-      configuracoesIdUsuario: novaDespesa.configuracoesIdUsuario,
-    );
+      final int id = await _db.insertDespesa(data);
 
-    _despesasMockadas.insert(0, novaDespesaComId);
-    return novaDespesaComId;
+      // Retorna a despesa com o ID gerado pelo banco
+      return Despesa(
+        idDespesa: id,
+        valor: novaDespesa.valor,
+        placa: novaDespesa.placa,
+        observacao: novaDespesa.observacao,
+        dataHora: novaDespesa.dataHora,
+        recorrente: novaDespesa.recorrente,
+        tipoDespesa: novaDespesa.tipoDespesa,
+        configuracoesIdUsuario: novaDespesa.configuracoesIdUsuario,
+      );
+    } catch (e) {
+      throw Exception('Erro ao adicionar despesa: $e');
+    }
   }
 
-  // Método para atualizar despesa nos dados mockados
   static Future<Despesa> atualizarDespesa(Despesa despesaAtualizada) async {
-    await Future.delayed(const Duration(milliseconds: 600));
+    try {
+      final data = despesaAtualizada.toJson();
+      // Remove o id_despesa do update
+      data.remove('id_despesa');
 
-    final index = _despesasMockadas.indexWhere(
-      (d) => d.idDespesa == despesaAtualizada.idDespesa,
-    );
-    if (index == -1) {
-      throw Exception('Despesa não encontrada');
+      final int rowsAffected = await _db.updateDespesa(
+        despesaAtualizada.idDespesa,
+        data,
+      );
+
+      if (rowsAffected == 0) {
+        throw Exception('Despesa não encontrada');
+      }
+
+      return despesaAtualizada;
+    } catch (e) {
+      throw Exception('Erro ao atualizar despesa: $e');
     }
-
-    _despesasMockadas[index] = despesaAtualizada;
-    return despesaAtualizada;
   }
 
-  // Método para excluir despesa dos dados mockados
   static Future<void> excluirDespesa(int id) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    try {
+      final int rowsAffected = await _db.deleteDespesa(id);
 
-    final index = _despesasMockadas.indexWhere((d) => d.idDespesa == id);
-    if (index == -1) {
-      throw Exception('Despesa não encontrada');
+      if (rowsAffected == 0) {
+        throw Exception('Despesa não encontrada');
+      }
+    } catch (e) {
+      throw Exception('Erro ao excluir despesa: $e');
     }
+  }
 
-    _despesasMockadas.removeAt(index);
+  /// Busca despesas por tipo
+  static Future<List<Despesa>> buscarDespesasPorTipo(String tipo) async {
+    try {
+      final List<Map<String, dynamic>> results = await _db.getDespesasByTipo(
+        tipo,
+      );
+      return results.map((json) => Despesa.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Erro ao buscar despesas por tipo $tipo: $e');
+    }
+  }
+
+  /// Busca despesas por período
+  static Future<List<Despesa>> buscarDespesasPorPeriodo(
+    DateTime dataInicio,
+    DateTime dataFim,
+  ) async {
+    try {
+      final String inicio = dataInicio.toIso8601String();
+      final String fim = dataFim.toIso8601String();
+
+      final List<Map<String, dynamic>> results = await _db.getDespesasByPeriodo(
+        inicio,
+        fim,
+      );
+      return results.map((json) => Despesa.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Erro ao buscar despesas por período: $e');
+    }
+  }
+
+  /// Busca despesas por período (usando strings)
+  static Future<List<Despesa>> buscarDespesasPorPeriodoString(
+    String dataInicio,
+    String dataFim,
+  ) async {
+    try {
+      final List<Map<String, dynamic>> results = await _db.getDespesasByPeriodo(
+        dataInicio,
+        dataFim,
+      );
+      return results.map((json) => Despesa.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception(
+        'Erro ao buscar despesas por período $dataInicio - $dataFim: $e',
+      );
+    }
+  }
+
+  /// Busca despesas não sincronizadas
+  static Future<List<Despesa>> buscarDespesasNaoSincronizadas() async {
+    try {
+      final List<Map<String, dynamic>> results = await _db
+          .getDadosNaoSincronizados('despesa');
+      return results.map((json) => Despesa.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Erro ao buscar despesas não sincronizadas: $e');
+    }
+  }
+
+  /// Marca uma despesa como sincronizada
+  static Future<void> marcarDespesaComoSincronizada(int id) async {
+    try {
+      await _db.marcarComoSincronizado('despesa', id);
+    } catch (e) {
+      throw Exception('Erro ao marcar despesa ID $id como sincronizada: $e');
+    }
+  }
+
+  /// Calcula o total de despesas
+  static Future<double> calcularTotalDespesas() async {
+    try {
+      final List<Despesa> todasDespesas = await buscarDespesas();
+      return todasDespesas.fold<double>(
+        0.0,
+        (total, despesa) => total + despesa.valor,
+      );
+    } catch (e) {
+      throw Exception('Erro ao calcular total de despesas: $e');
+    }
+  }
+
+  /// Calcula o total de despesas por tipo
+  static Future<double> calcularTotalDespesasPorTipo(String tipo) async {
+    try {
+      final List<Despesa> despesas = await buscarDespesasPorTipo(tipo);
+      return despesas.fold<double>(
+        0.0,
+        (total, despesa) => total + despesa.valor,
+      );
+    } catch (e) {
+      throw Exception('Erro ao calcular total de despesas por tipo $tipo: $e');
+    }
+  }
+
+  /// Calcula o total de despesas por período
+  static Future<double> calcularTotalDespesasPorPeriodo(
+    DateTime dataInicio,
+    DateTime dataFim,
+  ) async {
+    try {
+      final List<Despesa> despesas = await buscarDespesasPorPeriodo(
+        dataInicio,
+        dataFim,
+      );
+      return despesas.fold<double>(
+        0.0,
+        (total, despesa) => total + despesa.valor,
+      );
+    } catch (e) {
+      throw Exception('Erro ao calcular total de despesas por período: $e');
+    }
+  }
+
+  /// Cria uma nova despesa com valores padrão
+  static Despesa criarDespesa({
+    required double valor,
+    required String tipoDespesa,
+    String placa = '',
+    String observacao = '',
+    DateTime? dataHora,
+    bool recorrente = false,
+    required int configuracoesIdUsuario,
+  }) {
+    return Despesa(
+      idDespesa: 0, // ID será gerado pelo banco
+      valor: valor,
+      placa: placa,
+      observacao: observacao,
+      dataHora: dataHora ?? DateTime.now(),
+      recorrente: recorrente,
+      tipoDespesa: tipoDespesa,
+      configuracoesIdUsuario: configuracoesIdUsuario,
+    );
   }
 }

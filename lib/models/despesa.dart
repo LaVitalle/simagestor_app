@@ -1,21 +1,21 @@
 class Despesa {
   final int idDespesa;
   final double valor;
+  final String placa;
   final String observacao;
   final DateTime dataHora;
   final bool recorrente;
   final String tipoDespesa;
-  final String placaVeiculo;
   final int configuracoesIdUsuario;
 
   Despesa({
     required this.idDespesa,
     required this.valor,
+    required this.placa,
     required this.observacao,
     required this.dataHora,
     required this.recorrente,
     required this.tipoDespesa,
-    required this.placaVeiculo,
     required this.configuracoesIdUsuario,
   });
 
@@ -23,12 +23,12 @@ class Despesa {
     return Despesa(
       idDespesa: json['id_despesa'] as int,
       valor: (json['valor'] as num).toDouble(),
+      placa: json['placa'] as String? ?? '',
       observacao: json['observacao'] as String? ?? '',
       dataHora: DateTime.parse(json['data_hora'] as String),
       recorrente: json['recorrente'] == 1,
       tipoDespesa: json['tipo_despesa'] as String? ?? '',
-      placaVeiculo: json['placa_veiculo'] as String? ?? '',
-      configuracoesIdUsuario: json['configurações_id_usuario'] as int,
+      configuracoesIdUsuario: json['configuracoes_id_usuario'] as int,
     );
   }
 
@@ -36,12 +36,12 @@ class Despesa {
     return {
       'id_despesa': idDespesa,
       'valor': valor,
+      'placa': placa,
       'observacao': observacao,
       'data_hora': dataHora.toIso8601String(),
       'recorrente': recorrente ? 1 : 0,
       'tipo_despesa': tipoDespesa,
-      'placa_veiculo': placaVeiculo,
-      'configurações_id_usuario': configuracoesIdUsuario,
+      'configuracoes_id_usuario': configuracoesIdUsuario,
     };
   }
 
@@ -59,6 +59,6 @@ class Despesa {
 
   @override
   String toString() {
-    return 'Despesa{idDespesa: $idDespesa, valor: $valor, observacao: $observacao, dataHora: $dataHora, recorrente: $recorrente, tipoDespesa: $tipoDespesa, placaVeiculo: $placaVeiculo, configuracoesIdUsuario: $configuracoesIdUsuario}';
+    return 'Despesa{idDespesa: $idDespesa, valor: $valor, placa: $placa, observacao: $observacao, dataHora: $dataHora, recorrente: $recorrente, tipoDespesa: $tipoDespesa, configuracoesIdUsuario: $configuracoesIdUsuario}';
   }
 }
