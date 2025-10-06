@@ -10,8 +10,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   void handleAbastecimento() {
-    debugPrint("Navegar para Controle de Abastecimento");
-    // Exemplo: Navigator.pushNamed(context, '/abastecimento');
+    Navigator.pushNamed(context, '/fuel');
   }
 
   void handleDespesas() {

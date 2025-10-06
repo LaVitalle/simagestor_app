@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:simagestor_app/screens/login_page.dart';
 import 'package:simagestor_app/screens/home_page.dart';
+import 'package:simagestor_app/screens/fuel_pages/fuel_page.dart';
+import 'package:simagestor_app/screens/fuel_pages/new_fueling_page.dart';
+import 'package:simagestor_app/screens/fuel_pages/fuel_detail_page.dart';
+import 'package:simagestor_app/models/fuel.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,6 +24,12 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginPage(),
         '/home': (context) => const HomePage(),
+        '/fuel': (context) => const FuelPage(),
+        '/new-fueling': (context) => const NewFuelingPage(),
+        '/fuel-detail': (context) {
+          final fuelRecord = ModalRoute.of(context)!.settings.arguments as FuelModel;
+          return FuelDetailPage(fuelRecord: fuelRecord);
+        },
       },
     );
   }
