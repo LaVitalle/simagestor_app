@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simagestor_app/services/login_service.dart';
+import 'package:simagestor_app/services/service_local_database.dart';
 import 'package:simagestor_app/themes/app_colors.dart';
 
 class LoginPage extends StatefulWidget {
@@ -25,18 +26,35 @@ class _LoginPageState extends State<LoginPage> {
       String password = passwordController.text.trim();
       String company = companyController.text.trim();
 
-      Map<String, dynamic> loginData = await _loginService.authUser(email, password, company);
-      String? token = loginData['data']['token'];
-      dynamic userId = loginData['data']['user_id'];
+      try {
+        Map<String, dynamic> loginData = await _loginService.authUser(email, password, company);
+        String? token = loginData['data']['token'];
+        dynamic userId = loginData['data']['user_id'];
+        bool isAdmin = false;
 
-      setState(() {
-        _message = loginData['message'];
-      });
+        if(loginData['data']['nivel_acesso'] == 'adm'){
+          isAdmin = true;
+        }
 
-      if (token != null && token.isNotEmpty) {
-        debugPrint("Token recebido: $token");
-      } else {
-        debugPrint("Falha ao obter token");
+        setState(() {
+          _message = loginData['message'];
+        });
+
+        if (token != null && token.isNotEmpty) {
+            final configuracao = {
+              'id_usuario': userId,
+              'url_empresa': 'https://$company.simagestor.com.br/api',
+              'data_expiracao': DateTime.now().add(Duration(seconds: 30)).toIso8601String(),
+              'token': token,
+              'isAdmin': isAdmin,
+            };
+
+            await ServiceLocalDatabase.instance.insertConfiguracao(configuracao);
+
+            Navigator.pushNamed(context, '/home');
+        }
+      } catch(e) {
+        _message = 'Não foi possível realizar o login no momento. Por favor, tente novamente mais tarde.';
       }
     }
   }
