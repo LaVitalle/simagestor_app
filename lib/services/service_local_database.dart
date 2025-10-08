@@ -2,8 +2,10 @@ import 'package:simagestor_app/enum/model_enum.dart';
 import 'package:simagestor_app/services/service_api.dart';
 import 'package:simagestor_app/services/service_connection.dart';
 import 'package:simagestor_app/services/service_sync.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:sqflite/sqflite.dart';
 
 class ServiceLocalDatabase {
   static final ServiceLocalDatabase instance = ServiceLocalDatabase._init();
@@ -19,10 +21,18 @@ class ServiceLocalDatabase {
   }
 
   Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    if (kIsWeb) {
+      final databaseFactory = databaseFactoryFfiWeb;
+      final path = join(await getDatabasesPath(), filePath);
+      return await databaseFactory.openDatabase(path, options: OpenDatabaseOptions(
+        version: 1,
+        onCreate: _createDB,
+      ));
+    } else {
+      final dbPath = await getDatabasesPath();
+      final path = join(dbPath, filePath);
+      return await openDatabase(path, version: 1, onCreate: _createDB);
+    }
   }
 
 
