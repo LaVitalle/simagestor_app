@@ -15,6 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
 
   String _message = '';
+  bool _isLoading = false;
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -25,36 +26,49 @@ class _LoginPageState extends State<LoginPage> {
       String email = emailController.text.trim();
       String password = passwordController.text.trim();
       String company = companyController.text.trim();
-
+  
       try {
-        Map<String, dynamic> loginData = await _loginService.authUser(email, password, company);
-        String? token = loginData['data']['token'];
-        dynamic userId = loginData['data']['user_id'];
-        bool isAdmin = false;
-
-        if(loginData['data']['nivel_acesso'] == 'adm'){
-          isAdmin = true;
-        }
-
         setState(() {
-          _message = loginData['message'];
+          _isLoading = true;
         });
 
-        if (token != null && token.isNotEmpty) {
-            final configuracao = {
-              'id_usuario': userId,
-              'url_empresa': 'https://$company.simagestor.com.br/api',
-              'data_expiracao': DateTime.now().add(Duration(seconds: 30)).toIso8601String(),
-              'token': token,
-              'isAdmin': isAdmin,
-            };
+        Map<String, dynamic> loginData = await _loginService.authUser(email, password, company);
 
-            await ServiceLocalDatabase.instance.insertConfiguracao(configuracao);
-
-            Navigator.pushNamed(context, '/home');
+        if (loginData['status'] != 'success') {
+          setState(() {
+            _message = loginData['message'] ?? 'Erro ao realizar login';
+            _isLoading = false;
+          });
+          return;
         }
-      } catch(e) {
-        _message = 'Não foi possível realizar o login no momento. Por favor, tente novamente mais tarde.';
+
+        String? token = loginData['data']['token'];
+        dynamic userId = loginData['data']['user_id'];
+        bool isAdmin = loginData['data']['nivel_acesso'] == 'adm';
+
+        final configuracao = {
+          'id_usuario': userId,
+          'url_empresa': 'https://$company.simagestor.com.br/api',
+          'data_expiracao': DateTime.now().add(Duration(seconds: 30)).toIso8601String(),
+          'token': token,
+          'isAdmin': isAdmin,
+        };
+
+        ServiceLocalDatabase database = ServiceLocalDatabase.instance;
+        dynamic infos = await database.getConfiguracaoById(userId);
+        if(infos == null){
+          await database.insertConfiguracao(configuracao);
+        } else {
+          await database.updateConfiguracao(userId, configuracao);
+        }
+
+        Navigator.pushNamed(context, '/home');
+
+      } catch (e) {
+        setState(() {
+          _message = 'Login ou senha inválidos. Verifique suas informações e tente novamente.';
+          _isLoading = false;
+        });
       }
     }
   }
@@ -81,30 +95,53 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                _buildTextField("E-mail", false, emailController, (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Digite seu e-mail";
-                  }
-                  if (!value.contains("@")) {
-                    return "E-mail inválido";
-                  }
-                  return null;
-                }),
+                
+                // E-mail
+                _buildTextField(
+                  "E-mail",
+                  false,
+                  emailController,
+                  (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Digite seu e-mail";
+                    }
+                    if (!value.contains("@")) {
+                      return "E-mail inválido";
+                    }
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 15),
-                _buildTextField("Senha", true, passwordController, (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Digite sua senha";
-                  }
-                  return null;
-                }),
+
+                // Senha
+                _buildTextField(
+                  "Senha",
+                  true,
+                  passwordController,
+                  (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Digite sua senha";
+                    }
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 15),
-                _buildTextField("Empresa", false, companyController, (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Digite o nome da empresa";
-                  }
-                  return null;
-                }),
+
+                // Empresa
+                _buildTextField(
+                  "Empresa",
+                  false,
+                  companyController,
+                  (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Digite o nome da empresa";
+                    }
+                    return null;
+                  },
+                ),
                 const SizedBox(height: 25),
+
+                // Botão de Login com loader
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -115,17 +152,38 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(5),
                       ),
                     ),
-                    onPressed: handleLogin,
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(
-                        color: AppColors.textButton,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    onPressed: _isLoading ? null : handleLogin,
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: AppColors.textButton,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            "Login",
+                            style: TextStyle(
+                              color: AppColors.textButton,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
-                Text(_message, style: TextStyle(color: AppColors.text))
+
+                const SizedBox(height: 15),
+
+                // Mensagem de erro ou status
+                if (_message.isNotEmpty)
+                  Text(
+                    _message,
+                    style: TextStyle(
+                      color: AppColors.text,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
               ],
             ),
           ),
@@ -133,6 +191,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
 
   Widget _buildTextField(
     String hint,
