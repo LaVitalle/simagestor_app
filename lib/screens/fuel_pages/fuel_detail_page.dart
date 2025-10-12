@@ -70,13 +70,13 @@ class FuelDetailPage extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // ID do registro
+            // Placa do veículo
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  fuelRecord.id,
+                  fuelRecord.plate.isNotEmpty ? fuelRecord.plate : 'ID: ${fuelRecord.id}',
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -86,60 +86,127 @@ class FuelDetailPage extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 8),
+
+            // Data e hora
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  _formatDate(fuelRecord.date),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppColors.text,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+            ),
+
             const SizedBox(height: 32),
 
             // Detalhes do abastecimento
             Expanded(
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Seção: Informações do Veículo
+                    _buildSectionTitle('Informações do Veículo'),
+                    const SizedBox(height: 16),
+                    
                     _buildDetailRow(
-                      label: 'Data do abastecimento:',
-                      value: _formatDate(fuelRecord.date),
+                      label: 'Placa:',
+                      value: fuelRecord.plate.isNotEmpty ? fuelRecord.plate : 'Não informada',
                     ),
                     
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     
                     _buildDetailRow(
                       label: 'Quilometragem:',
-                      value: '${fuelRecord.km} KM',
+                      value: '${fuelRecord.km.toStringAsFixed(0)} km',
                     ),
                     
+                    const SizedBox(height: 24),
+                    
+                    // Seção: Detalhes do Abastecimento
+                    _buildSectionTitle('Detalhes do Abastecimento'),
                     const SizedBox(height: 16),
                     
                     _buildDetailRow(
-                      label: 'Tipo de combustível:',
-                      value: fuelRecord.fuel,
+                      label: 'Combustível:',
+                      value: fuelRecord.fuel.isNotEmpty ? fuelRecord.fuel : 'Não informado',
                     ),
                     
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     
                     _buildDetailRow(
                       label: 'Valor por litro:',
                       value: _formatCurrency(fuelRecord.valuePerLiter),
                     ),
                     
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     
                     _buildDetailRow(
                       label: 'Litros abastecidos:',
-                      value: '${fuelRecord.liters.toStringAsFixed(0)}L',
+                      value: '${fuelRecord.liters.toStringAsFixed(2)} L',
                     ),
                     
+                    const SizedBox(height: 24),
+                    
+                    // Seção: Valores
+                    _buildSectionTitle('Valores'),
                     const SizedBox(height: 16),
                     
-                    _buildDetailRow(
-                      label: 'Total:',
-                      value: _formatCurrency(fuelRecord.total),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2C4747),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Total do Abastecimento:',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            _formatCurrency(fuelRecord.total),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    
+                    const SizedBox(height: 24), // Espaço extra no final
                   ],
                 ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 18,
+        color: AppColors.title,
+        fontWeight: FontWeight.bold,
       ),
     );
   }
@@ -176,5 +243,6 @@ class FuelDetailPage extends StatelessWidget {
       ],
     );
   }
+
 }
 

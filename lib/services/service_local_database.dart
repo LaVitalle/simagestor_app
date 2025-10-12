@@ -87,6 +87,7 @@ class ServiceLocalDatabase {
     await db.execute('''
       CREATE TABLE abastecimento (
         id_abastecimento INTEGER PRIMARY KEY AUTOINCREMENT,
+        placa TEXT,
         data_hora TEXT NOT NULL,
         km REAL,
         combustivel TEXT,
@@ -109,6 +110,8 @@ class ServiceLocalDatabase {
           await _serviceSync.syncAllModel();
           return true;
         } else {
+          // Carregar configurações antes de enviar dados
+          await ServiceApi().loadConfigFromDatabase();
           await ServiceApi().postFormDataWithAuth(model.api, data);
           return true;
         }
@@ -366,8 +369,17 @@ class ServiceLocalDatabase {
   Future<int> insertAbastecimento(Map<String, dynamic> abastecimento) async {
     try {
       final db = await instance.database;
+      
+      // Adicionar data/hora atual se não foi fornecida ou se está vazia
+      if (!abastecimento.containsKey('data_hora') || 
+          abastecimento['data_hora'] == null || 
+          abastecimento['data_hora'].toString().isEmpty) {
+        DateTime agora = DateTime.now();
+        abastecimento['data_hora'] = agora.toIso8601String();
+      }
+      
       var asynced = await insertApiData(Model.combustivel, abastecimento);
-      abastecimento['sync'] = asynced;
+      abastecimento['sync'] = asynced ? 1 : 0;
       return await db.insert('abastecimento', abastecimento);
     } catch (e) {
       print('Erro ao inserir abastecimento: $e');
@@ -375,12 +387,16 @@ class ServiceLocalDatabase {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getAllAbastecimentos() async {
+  Future<List<Map<String, dynamic>>> getLast5Abastecimentos() async {
     try {
       final db = await instance.database;
-      return await db.query('abastecimento');
+      return await db.query(
+        'abastecimento',
+        orderBy: 'id_abastecimento DESC',
+        limit: 5,
+      );
     } catch (e) {
-      print('Erro ao buscar todos os abastecimentos: $e');
+      print('Erro ao buscar os últimos 5 abastecimentos: $e');
       rethrow;
     }
   }
@@ -464,7 +480,7 @@ class ServiceLocalDatabase {
       return await db.query(
         tabela,
         where: 'sync = ? OR sync IS NULL',
-        whereArgs: [false],
+        whereArgs: [0],
       );
     } catch (e) {
       print('Erro ao buscar dados não sincronizados da tabela $tabela: $e');
@@ -477,7 +493,7 @@ class ServiceLocalDatabase {
       final db = await instance.database;
       return await db.update(
         tabela,
-        {'sync': true},
+        {'sync': 1},
         where: 'id_${tabela} = ?',
         whereArgs: [id],
       );

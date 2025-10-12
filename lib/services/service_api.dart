@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:simagestor_app/services/service_local_database.dart';
 
 class ServiceApi {
   static final ServiceApi _instance = ServiceApi._internal();
@@ -16,6 +17,26 @@ class ServiceApi {
 
   void init(String url) {
     this.url = url;
+  }
+
+  /// Configura o token de autenticação
+  void setToken(String token) {
+    this.token = token;
+  }
+
+  Future<void> loadConfigFromDatabase() async {
+    try {
+      final db = ServiceLocalDatabase.instance;
+      final configs = await db.getAllConfiguracoes();
+      
+      if (configs.isNotEmpty) {
+        final config = configs.first;
+        this.url = config['url_empresa'];
+        this.token = config['token'];
+      }
+    } catch (e) {
+      print("Erro ao carregar configurações: $e");
+    }
   }
 
   String _buildPath(String path) {
@@ -88,6 +109,44 @@ class ServiceApi {
       data: formData,
       options: Options(
         headers: {"Authorization": "Bearer $token"},
+      ),
+    );
+    return response.data as T;
+  }
+
+  Future<T> postJsonWithAuth<T>(String path, Map<String, dynamic> body) async {
+    final url = _buildPath(path);
+    
+    try {
+      final response = await _dio.post<T>(
+        url,
+        data: body,
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+            "Content-Type": "application/json",
+          },
+        ),
+      );
+      
+      return response.data as T;
+    } catch (e) {
+      if (e is DioException) {
+        print("Erro na API: ${e.response?.statusCode} - ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  /// Envia dados como JSON sem autenticação
+  Future<T> postJson<T>(String path, Map<String, dynamic> body) async {
+    final response = await _dio.post<T>(
+      _buildPath(path),
+      data: body,
+      options: Options(
+        headers: {
+          "Content-Type": "application/json",
+        },
       ),
     );
     return response.data as T;

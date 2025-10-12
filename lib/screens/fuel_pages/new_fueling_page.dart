@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:simagestor_app/themes/app_colors.dart';
 import 'package:simagestor_app/models/fuel.dart';
 import 'package:simagestor_app/services/service_local_database.dart';
+import 'package:simagestor_app/services/service_sync.dart';
+import 'package:simagestor_app/services/service_connection.dart';
 
 class NewFuelingPage extends StatefulWidget {
   const NewFuelingPage({super.key});
@@ -25,6 +27,8 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
   // Lista de tipos de combustível
   final List<String> _fuelTypes = ['Gasolina', 'Etanol', 'Diesel', 'GNV'];
   String? _selectedFuelType;
+
+  final ServiceSync _serviceSync = ServiceSync();
 
   @override
   void initState() {
@@ -127,26 +131,38 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
 
   void _saveFueling() async {
     if (_formKey.currentState!.validate()) {
-      // Monta o registro para o banco local
       final abastecimento = {
-        'placa_veiculo': _plateController.text,
+        'placa': _plateController.text,
         'data_hora': _parseDate(_dateController.text),
-        'km': int.tryParse(_kmController.text) ?? 0,
+        'km': (_kmController.text.isNotEmpty ? _kmController.text : '0'),
         'combustivel': _selectedFuelType ?? '',
-        'valor_por_litro': double.tryParse(_valuePerLiterController.text.replaceAll(',', '.')) ?? 0.0,
-        'litros_abastecidos': double.tryParse(_litersController.text.replaceAll(',', '.')) ?? 0.0,
-        'total_RS': double.tryParse(_totalController.text.replaceAll(',', '.')) ?? 0.0,
-        'sync': false,
+        'valor_por_litro': _valuePerLiterController.text.replaceAll(',', '.'),
+        'litros_abastecidos': _litersController.text.replaceAll(',', '.'),
+        'total_RS': _totalController.text.replaceAll(',', '.'),
+        'sync': 0,
       };
 
       try {
-        await ServiceLocalDatabase.instance.insertAbastecimento(abastecimento);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Abastecimento salvo com sucesso!'),
-            backgroundColor: AppColors.primary,
-          ),
-        );
+        final hasConnection = await ServiceConnection.hasInternetConnection();
+        if (hasConnection) {
+          await ServiceLocalDatabase.instance.insertAbastecimento(abastecimento);
+          await _serviceSync.syncAllModel();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Abastecimento salvo e sincronizado!'),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        } else {
+          abastecimento['sync'] = 0;
+          await ServiceLocalDatabase.instance.insertAbastecimento(abastecimento);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Abastecimento salvo localmente (offline)!'),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+        }
         Navigator.pop(context);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -167,7 +183,9 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
         final day = int.parse(parts[0]);
         final month = int.parse(parts[1]);
         final year = int.parse(parts[2]);
-        final dt = DateTime(year, month, day);
+        final now = DateTime.now();
+        // Usar a data selecionada mas com o horário atual para evitar duplicatas
+        final dt = DateTime(year, month, day, now.hour, now.minute, now.second, now.millisecond);
         return dt.toIso8601String();
       }
     } catch (_) {}

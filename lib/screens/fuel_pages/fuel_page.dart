@@ -24,11 +24,11 @@ class _FuelPageState extends State<FuelPage> {
   }
 
   Future<void> _loadFuelRecords() async {
-    final abastecimentos = await ServiceLocalDatabase.instance.getAllAbastecimentos();
+    final abastecimentos = await ServiceLocalDatabase.instance.getLast5Abastecimentos();
     _fuelRecords = abastecimentos.map((item) {
       return FuelModel(
         id: item['id_abastecimento'].toString(),
-        plate: item['placa_veiculo'] ?? '',
+        plate: item['placa'] ?? '',
         date: DateTime.tryParse(item['data_hora'] ?? '') ?? DateTime.now(),
         km: (item['km'] is int) ? item['km'] : int.tryParse(item['km']?.toString() ?? '') ?? 0,
         fuel: item['combustivel'] ?? '',
@@ -86,20 +86,18 @@ class _FuelPageState extends State<FuelPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  // Botão Voltar
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2C4747),
+                      color: Color(0xFF2C4747),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: TextButton(
                       onPressed: _navigateBack,
-                      child: const Text(
+                      child: Text(
                         'Voltar',
                         style: TextStyle(
                           color: Colors.white,
@@ -108,9 +106,8 @@ class _FuelPageState extends State<FuelPage> {
                       ),
                     ),
                   ),
-                  const Spacer(),
-                  // Título Simagestor
-                  const Text(
+                  Spacer(),
+                  Text(
                     'Simagestor',
                     style: TextStyle(
                       fontSize: 24,
@@ -118,20 +115,17 @@ class _FuelPageState extends State<FuelPage> {
                       color: AppColors.title,
                     ),
                   ),
-                  const Spacer(),
-                  // Espaço para balancear o layout
-                  const SizedBox(width: 80),
+                  Spacer(),
+                  SizedBox(width: 80),
                 ],
               ),
             ),
-            
-            // Título da seção
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Histórico de abastecimento',
+                  'Últimos 5 abastecimentos',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -140,22 +134,19 @@ class _FuelPageState extends State<FuelPage> {
                 ),
               ),
             ),
-            
-            const SizedBox(height: 16),
-            
-            // Barra de pesquisa
+            SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2C2C2C),
+                  color: Color(0xFF2C2C2C),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: TextField(
                   controller: _searchController,
                   onChanged: _filterRecords,
-                  style: const TextStyle(color: AppColors.textInput),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: AppColors.textInput),
+                  decoration: InputDecoration(
                     hintText: 'Pesquisar',
                     hintStyle: TextStyle(color: Color(0xFFA0A0A0)),
                     border: InputBorder.none,
@@ -167,63 +158,70 @@ class _FuelPageState extends State<FuelPage> {
                 ),
               ),
             ),
-            
-            const SizedBox(height: 16),
-            
-            // Lista de registros
+            SizedBox(height: 16),
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
                 itemCount: _filteredRecords.length,
                 itemBuilder: (context, index) {
                   final record = _filteredRecords[index];
                   return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
+                    margin: EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
                       color: AppColors.background,
                       border: Border.all(
-                        color: const Color(0xFF404040),
+                        color: Color(0xFF404040),
                         width: 1,
                       ),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: EdgeInsets.all(16.0),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                record.id,
-                                style: const TextStyle(
+                                'Placa: ${record.plate}',
+                                style: TextStyle(
                                   color: AppColors.text,
+                                  fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                               Text(
-                                '${record.date.day.toString().padLeft(2, '0')}/${record.date.month.toString().padLeft(2, '0')}/${record.date.year} ${record.date.hour.toString().padLeft(2, '0')}:${record.date.minute.toString().padLeft(2, '0')}',
-                                style: const TextStyle(
+                                'Valor: R\$ ${record.total.toStringAsFixed(2)}',
+                                style: TextStyle(
                                   color: AppColors.text,
-                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 8),
+                          Text(
+                            'Data: ${record.date.day.toString().padLeft(2, '0')}/${record.date.month.toString().padLeft(2, '0')}/${record.date.year} ${record.date.hour.toString().padLeft(2, '0')}:${record.date.minute.toString().padLeft(2, '0')}',
+                            style: TextStyle(
+                              color: AppColors.text,
+                              fontSize: 14,
+                            ),
+                          ),
+                          SizedBox(height: 12),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
                               onPressed: () => _viewRecord(record),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF00796B),
+                                backgroundColor: Color(0xFF00796B),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding: EdgeInsets.symmetric(vertical: 8),
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Visualizar',
                                 style: TextStyle(
                                   color: Colors.white,
@@ -239,27 +237,25 @@ class _FuelPageState extends State<FuelPage> {
                 },
               ),
             ),
-            
-            // Botão Novo Abastecimento
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _newFueling,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00796B),
+                    backgroundColor: Color(0xFF00796B),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Novo abastecimento',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
                 ),
@@ -269,11 +265,5 @@ class _FuelPageState extends State<FuelPage> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 }

@@ -51,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
           'url_empresa': 'https://$company.simagestor.com.br/api',
           'data_expiracao': DateTime.now().add(Duration(seconds: 30)).toIso8601String(),
           'token': token,
-          'isAdmin': isAdmin,
+          'isAdmin': isAdmin ? 1 : 0,
         };
 
         ServiceLocalDatabase database = ServiceLocalDatabase.instance;
