@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:simagestor_app/themes/app_colors.dart';
 import 'package:simagestor_app/models/fuel.dart';
+import 'package:simagestor_app/services/service_local_database.dart';
 import 'package:simagestor_app/screens/fuel_pages/new_fueling_page.dart';
 import 'package:simagestor_app/screens/fuel_pages/fuel_detail_page.dart';
 
@@ -22,41 +23,23 @@ class _FuelPageState extends State<FuelPage> {
     _loadFuelRecords();
   }
 
-  void _loadFuelRecords() {
-    // Dados de exemplo baseados na imagem
-    _fuelRecords = [
-      FuelModel.fromJson(
-        {'id': 'BAA7E82',
-        'plate': 'ABC-1234',
-        'date': DateTime(2025, 8, 29, 19, 30),
-        'km': 50000,
-        'fuel': 'Gasolina',
-        'valuePerLiter': 5.50,
-        'liters': 40.0,
-        'total': 220.0,
-      }),
-      FuelModel.fromJson(
-        {'id': 'BAA7E83',
-        'plate': 'XYZ-5678',
-        'date': DateTime(2025, 8, 28, 14, 15),
-        'km': 45000,
-        'fuel': 'Etanol',
-        'valuePerLiter': 3.80,
-        'liters': 35.0,
-        'total'   : 133.0,
-      }),
-      FuelModel.fromJson(
-        {'id': 'BAA7E84',
-        'plate': 'DEF-9012',
-        'date': DateTime(2025, 8, 27, 10, 45),
-        'km': 48000,
-        'fuel': 'Diesel',
-        'valuePerLiter': 4.20,
-        'liters': 50.0,
-        'total': 210.0,
-      }),
-    ];
-    _filteredRecords = List.from(_fuelRecords);
+  Future<void> _loadFuelRecords() async {
+    final abastecimentos = await ServiceLocalDatabase.instance.getAllAbastecimentos();
+    _fuelRecords = abastecimentos.map((item) {
+      return FuelModel(
+        id: item['id_abastecimento'].toString(),
+        plate: item['placa_veiculo'] ?? '',
+        date: DateTime.tryParse(item['data_hora'] ?? '') ?? DateTime.now(),
+        km: (item['km'] is int) ? item['km'] : int.tryParse(item['km']?.toString() ?? '') ?? 0,
+        fuel: item['combustivel'] ?? '',
+        valuePerLiter: (item['valor_por_litro'] is double) ? item['valor_por_litro'] : double.tryParse(item['valor_por_litro']?.toString() ?? '') ?? 0.0,
+        liters: (item['litros_abastecidos'] is double) ? item['litros_abastecidos'] : double.tryParse(item['litros_abastecidos']?.toString() ?? '') ?? 0.0,
+        total: (item['total_RS'] is double) ? item['total_RS'] : double.tryParse(item['total_RS']?.toString() ?? '') ?? 0.0,
+      );
+    }).toList();
+    setState(() {
+      _filteredRecords = List.from(_fuelRecords);
+    });
   }
 
   void _filterRecords(String query) {

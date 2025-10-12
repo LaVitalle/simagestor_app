@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:simagestor_app/themes/app_colors.dart';
 import 'package:simagestor_app/models/fuel.dart';
+import 'package:simagestor_app/services/service_local_database.dart';
 
 class NewFuelingPage extends StatefulWidget {
   const NewFuelingPage({super.key});
@@ -124,33 +125,53 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
     }
   }
 
-  void _saveFueling() {
+  void _saveFueling() async {
     if (_formKey.currentState!.validate()) {
-      // Criar novo registro de abastecimento
-      final newFueling = FuelModel(
-        id: _generateId(),
-        plate: _plateController.text,
-        date: DateTime.now(),
-        km: int.parse(_kmController.text),
-        fuel: _selectedFuelType ?? '',
-        valuePerLiter: double.parse(_valuePerLiterController.text.replaceAll(',', '.')),
-        liters: double.parse(_litersController.text.replaceAll(',', '.')),
-        total: double.parse(_totalController.text.replaceAll(',', '.')),
-      );
+      // Monta o registro para o banco local
+      final abastecimento = {
+        'placa_veiculo': _plateController.text,
+        'data_hora': _parseDate(_dateController.text),
+        'km': int.tryParse(_kmController.text) ?? 0,
+        'combustivel': _selectedFuelType ?? '',
+        'valor_por_litro': double.tryParse(_valuePerLiterController.text.replaceAll(',', '.')) ?? 0.0,
+        'litros_abastecidos': double.tryParse(_litersController.text.replaceAll(',', '.')) ?? 0.0,
+        'total_RS': double.tryParse(_totalController.text.replaceAll(',', '.')) ?? 0.0,
+        'sync': false,
+      };
 
-      // Aqui você pode salvar no banco de dados ou API
-      debugPrint('Novo abastecimento salvo: ${newFueling.id}');
-      
-      // Mostrar mensagem de sucesso e voltar
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Abastecimento salvo com sucesso!'),
-          backgroundColor: AppColors.primary,
-        ),
-      );
-      
-      Navigator.pop(context);
+      try {
+        await ServiceLocalDatabase.instance.insertAbastecimento(abastecimento);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Abastecimento salvo com sucesso!'),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+        Navigator.pop(context);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao salvar abastecimento: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
+  }
+
+  String _parseDate(String dateStr) {
+    // Espera formato dd/MM/yyyy
+    try {
+      final parts = dateStr.split('/');
+      if (parts.length == 3) {
+        final day = int.parse(parts[0]);
+        final month = int.parse(parts[1]);
+        final year = int.parse(parts[2]);
+        final dt = DateTime(year, month, day);
+        return dt.toIso8601String();
+      }
+    } catch (_) {}
+    return DateTime.now().toIso8601String();
   }
 
   String _generateId() {

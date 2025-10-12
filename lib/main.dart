@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:simagestor_app/screens/login_page.dart';
 import 'package:simagestor_app/screens/home_page.dart';
 import 'package:simagestor_app/screens/fuel_pages/fuel_page.dart';
@@ -10,6 +11,8 @@ import 'package:simagestor_app/screens/despesa/form_despesas_page.dart';
 import 'package:simagestor_app/screens/despesa/detalhes_despesa_page.dart';
 
 void main() {
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
   runApp(const MyApp());
 }
 
