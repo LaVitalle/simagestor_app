@@ -201,8 +201,8 @@ class _DetalhesDespesaPageState extends State<DetalhesDespesaPage> {
 
           _buildDetalheItem('Tipo de despesa', _despesa!.tipoDespesa),
 
-          if (_despesa!.placaVeiculo.isNotEmpty)
-            _buildDetalheItem('Placa do veículo', _despesa!.placaVeiculo),
+          if (_despesa!.placa.isNotEmpty)
+            _buildDetalheItem('Placa do veículo', _despesa!.placa),
 
           if (_despesa!.observacao.isNotEmpty)
             _buildDetalheItem('Observação', _despesa!.observacao),
