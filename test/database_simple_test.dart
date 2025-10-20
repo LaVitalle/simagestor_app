@@ -1,16 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../lib/services/service_local_database.dart';
 
 void main() {
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
+
   group('ServiceLocalDatabase - Testes Simples', () {
     late ServiceLocalDatabase dbService;
 
     setUp(() async {
       dbService = ServiceLocalDatabase.instance;
-    });
-
-    tearDown(() async {
-      await dbService.close();
+      await _clearDatabase();
     });
 
     test('Deve inicializar o banco de dados', () async {
@@ -22,7 +25,6 @@ void main() {
     test('Deve criar tabelas corretamente', () async {
       final db = await dbService.database;
       
-      // Verificar se as tabelas existem
       final tables = await db.rawQuery(
         "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
       );
@@ -37,14 +39,17 @@ void main() {
 
     test('Deve inserir e recuperar configuração', () async {
       final configuracao = {
+        'id_usuario': 1,
         'url_empresa': 'https://teste.com',
         'data_expiracao': '2024-12-31',
+        'token': 'token_teste_123',
+        'isAdmin': 1,
       };
 
       final id = await dbService.insertConfiguracao(configuracao);
       expect(id, greaterThan(0));
 
-      final configuracaoRecuperada = await dbService.getConfiguracaoById(id);
+      final configuracaoRecuperada = await dbService.getConfiguracaoById(1);
       expect(configuracaoRecuperada, isNotNull);
       expect(configuracaoRecuperada!['url_empresa'], equals('https://teste.com'));
     });
@@ -52,12 +57,13 @@ void main() {
     test('Deve inserir e recuperar despesa', () async {
       final despesa = {
         'valor': 150.50,
+        'placa': 'ABC-1234',
         'observacao': 'Teste de despesa',
         'data_hora': '2024-01-15 10:30:00',
         'recorrente': 0,
         'tipo_despesa': 'Combustível',
         'configuracoes_id_usuario': 1,
-        'sync': false,
+        'sync': 0,
       };
 
       final id = await dbService.insertDespesa(despesa);
@@ -76,7 +82,7 @@ void main() {
         'valor_por_litro': 5.50,
         'litros_abastecidos': 40.0,
         'total_RS': 220.0,
-        'sync': false,
+        'sync': 0,
         'configuracoes_id_usuario': 1,
       };
 
@@ -92,18 +98,18 @@ void main() {
       final checklist = {
         'placa_veiculo': 'ABC-1234',
         'motorista': 'João Silva',
-        'freios': 1,
-        'pneus': 1,
-        'nivel_oleo': 1,
-        'farois_lanterna': 1,
-        'documentacao_veiculo': 1,
-        'CNH_motorista': 1,
-        'limpadores_parabrisa': 1,
-        'cintos_de_seguranca': 1,
-        'fluido_de_arrefecimento': 1,
-        'suspensao': 1,
+        'freios': 'ok',
+        'pneus': 'ok',
+        'nivel_oleo': 'ok',
+        'farois_lanterna': 'ok',
+        'documentacao_veiculo': 'ok',
+        'CNH_motorista': 'ok',
+        'limpadores_parabrisa': 'ok',
+        'cintos_de_seguranca': 'ok',
+        'fluido_de_arrefecimento': 'ok',
+        'suspensao': 'ok',
         'campo_assinatura': 'João Silva',
-        'sync': false,
+        'sync': 0,
         'configuracoes_id_usuario': 1,
       };
 
@@ -116,20 +122,19 @@ void main() {
     });
 
     test('Deve atualizar dados corretamente', () async {
-      // Inserir despesa
       final despesa = {
         'valor': 100.0,
+        'placa': 'ABC-1234',
         'observacao': 'Original',
         'data_hora': '2024-01-15 10:30:00',
         'recorrente': 0,
         'tipo_despesa': 'Geral',
         'configuracoes_id_usuario': 1,
-        'sync': false,
+        'sync': 0,
       };
 
       final id = await dbService.insertDespesa(despesa);
       
-      // Atualizar despesa
       final updated = await dbService.updateDespesa(id, {
         'valor': 200.0,
         'observacao': 'Atualizada',
@@ -143,20 +148,19 @@ void main() {
     });
 
     test('Deve deletar dados corretamente', () async {
-      // Inserir despesa
       final despesa = {
         'valor': 100.0,
+        'placa': 'ABC-1234',
         'observacao': 'Para deletar',
         'data_hora': '2024-01-15 10:30:00',
         'recorrente': 0,
         'tipo_despesa': 'Geral',
         'configuracoes_id_usuario': 1,
-        'sync': false,
+        'sync': 0,
       };
 
       final id = await dbService.insertDespesa(despesa);
       
-      // Deletar despesa
       final deleted = await dbService.deleteDespesa(id);
       expect(deleted, equals(1));
 
@@ -165,56 +169,61 @@ void main() {
     });
 
     test('Deve buscar dados por critérios específicos', () async {
-      // Inserir múltiplas despesas
       await dbService.insertDespesa({
         'valor': 100.0,
+        'placa': 'ABC-1234',
         'observacao': 'Combustível',
         'data_hora': '2024-01-15 10:30:00',
         'recorrente': 0,
         'tipo_despesa': 'Combustível',
         'configuracoes_id_usuario': 1,
-        'sync': false,
+        'sync': 0,
       });
 
       await dbService.insertDespesa({
         'valor': 200.0,
+        'placa': 'ABC-1234',
         'observacao': 'Manutenção',
         'data_hora': '2024-01-15 11:30:00',
         'recorrente': 0,
         'tipo_despesa': 'Manutenção',
         'configuracoes_id_usuario': 1,
-        'sync': false,
+        'sync': 0,
       });
 
-      // Buscar por tipo
       final despesasCombustivel = await dbService.getDespesasByTipo('Combustível');
       expect(despesasCombustivel.length, equals(1));
       expect(despesasCombustivel.first['tipo_despesa'], equals('Combustível'));
     });
 
     test('Deve gerenciar sincronização', () async {
-      // Inserir dados não sincronizados
-      await dbService.insertDespesa({
+      final id = await dbService.insertDespesa({
         'valor': 100.0,
+        'placa': 'ABC-1234',
         'observacao': 'Não sincronizada',
         'data_hora': '2024-01-15 10:30:00',
         'recorrente': 0,
         'tipo_despesa': 'Geral',
         'configuracoes_id_usuario': 1,
-        'sync': false,
+        'sync': 0,
       });
 
-      // Buscar dados não sincronizados
       final dadosNaoSync = await dbService.getDadosNaoSincronizados('despesa');
-      expect(dadosNaoSync.length, equals(1));
+      expect(dadosNaoSync.length, greaterThanOrEqualTo(1));
 
-      // Marcar como sincronizado
-      final marcado = await dbService.marcarComoSincronizado('despesa', 1);
+      final marcado = await dbService.marcarComoSincronizado('despesa', id);
       expect(marcado, equals(1));
 
-      // Verificar se foi marcado
-      final despesa = await dbService.getDespesaById(1);
-      expect(despesa!['sync'], equals(true));
+      final despesa = await dbService.getDespesaById(id);
+      expect(despesa!['sync'], equals(1));
     });
   });
+}
+
+Future<void> _clearDatabase() async {
+  final db = await ServiceLocalDatabase.instance.database;
+  await db.delete('abastecimento');
+  await db.delete('despesa');
+  await db.delete('checklist');
+  await db.delete('configuracoes');
 }

@@ -194,7 +194,7 @@ class ServiceLocalDatabase {
     try {
       final db = await instance.database;
       var asynced = await insertApiData(Model.checklist, checklist);
-      checklist['sync'] = asynced;
+      checklist['sync'] = asynced ? 1 : 0;
       return await db.insert('checklist', checklist);
     } catch (e) {
       print('Erro ao inserir checklist: $e');
@@ -275,7 +275,7 @@ class ServiceLocalDatabase {
     try {
       final db = await instance.database;
       var asynced = await insertApiData(Model.despesa, despesa);
-      despesa['sync'] = asynced;
+      despesa['sync'] = asynced ? 1 : 0;
       return await db.insert('despesa', despesa);
     } catch (e) {
       print('Erro ao inserir despesa: $e');
