@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:simagestor_app/themes/app_colors.dart';
-import 'package:simagestor_app/models/fuel.dart';
 import 'package:simagestor_app/services/service_local_database.dart';
 import 'package:simagestor_app/services/service_sync.dart';
 import 'package:simagestor_app/services/service_connection.dart';
@@ -147,30 +146,38 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
         if (hasConnection) {
           await ServiceLocalDatabase.instance.insertAbastecimento(abastecimento);
           await _serviceSync.syncAllModel();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Abastecimento salvo e sincronizado!'),
-              backgroundColor: AppColors.primary,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Abastecimento salvo e sincronizado!'),
+                backgroundColor: AppColors.primary,
+              ),
+            );
+          }
         } else {
           abastecimento['sync'] = 0;
           await ServiceLocalDatabase.instance.insertAbastecimento(abastecimento);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Abastecimento salvo localmente (offline)!'),
+                backgroundColor: AppColors.primary,
+              ),
+            );
+          }
+        }
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Abastecimento salvo localmente (offline)!'),
-              backgroundColor: AppColors.primary,
+            SnackBar(
+              content: Text('Erro ao salvar abastecimento: $e'),
+              backgroundColor: Colors.red,
             ),
           );
         }
-        Navigator.pop(context);
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao salvar abastecimento: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     }
   }
@@ -192,12 +199,6 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
     return DateTime.now().toIso8601String();
   }
 
-  String _generateId() {
-    // Gerar ID único baseado no timestamp
-    final now = DateTime.now();
-      final id = now.millisecondsSinceEpoch.toString().substring(8);
-    return id.toUpperCase();
-  }
 
   @override
   Widget build(BuildContext context) {

@@ -1,6 +1,7 @@
 import 'package:simagestor_app/enum/model_enum.dart';
 import 'package:simagestor_app/services/service_api.dart';
 import 'package:simagestor_app/services/service_local_database.dart';
+import 'package:flutter/foundation.dart';
 
 class ServiceSync {
   final ServiceLocalDatabase _instace = ServiceLocalDatabase.instance;
@@ -89,7 +90,7 @@ class ServiceSync {
       syncedModel[model] = true;
     } catch (e) {
       syncedModel[model] = false;
-      print("Erro ao sincronizar $model: $e");
+      debugPrint("Erro ao sincronizar $model: $e");
     }
   }
 

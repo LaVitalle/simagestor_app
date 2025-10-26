@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:simagestor_app/services/service_local_database.dart';
 
 class ServiceApi {
@@ -31,11 +32,11 @@ class ServiceApi {
       
       if (configs.isNotEmpty) {
         final config = configs.first;
-        this.url = config['url_empresa'];
-        this.token = config['token'];
+        url = config['url_empresa'];
+        token = config['token'];
       }
     } catch (e) {
-      print("Erro ao carregar configurações: $e");
+      debugPrint("Erro ao carregar configurações: $e");
     }
   }
 
@@ -132,7 +133,7 @@ class ServiceApi {
       return response.data as T;
     } catch (e) {
       if (e is DioException) {
-        print("Erro na API: ${e.response?.statusCode} - ${e.response?.data}");
+        debugPrint("Erro na API: ${e.response?.statusCode} - ${e.response?.data}");
       }
       rethrow;
     }

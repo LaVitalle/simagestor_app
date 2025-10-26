@@ -3,14 +3,14 @@ import 'package:simagestor_app/services/service_api.dart';
 import 'package:simagestor_app/services/service_connection.dart';
 import 'package:simagestor_app/services/service_sync.dart';
 import 'package:path/path.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:sqflite/sqflite.dart';
 
 class ServiceLocalDatabase {
   static final ServiceLocalDatabase instance = ServiceLocalDatabase._init();
   static Database? _database;
-  static final ServiceSync _serviceSync = new ServiceSync(); 
+  static final ServiceSync _serviceSync = ServiceSync(); 
 
   ServiceLocalDatabase._init();
 
@@ -131,7 +131,7 @@ class ServiceLocalDatabase {
       final db = await instance.database;
       return await db.insert('configuracoes', configuracao);
     } catch (e) {
-      print('Erro ao inserir configuração: $e');
+      debugPrint('Erro ao inserir configuração: $e');
       rethrow;
     }
   }
@@ -141,7 +141,7 @@ class ServiceLocalDatabase {
       final db = await instance.database;
       return await db.query('configuracoes');
     } catch (e) {
-      print('Erro ao buscar todas as configurações: $e');
+      debugPrint('Erro ao buscar todas as configurações: $e');
       rethrow;
     }
   }
@@ -156,7 +156,7 @@ class ServiceLocalDatabase {
       );
       return result.isNotEmpty ? result.first : null;
     } catch (e) {
-      print('Erro ao buscar configuração por ID $id: $e');
+      debugPrint('Erro ao buscar configuração por ID $id: $e');
       rethrow;
     }
   }
@@ -171,7 +171,7 @@ class ServiceLocalDatabase {
         whereArgs: [id],
       );
     } catch (e) {
-      print('Erro ao atualizar configuração ID $id: $e');
+      debugPrint('Erro ao atualizar configuração ID $id: $e');
       rethrow;
     }
   }
@@ -185,8 +185,36 @@ class ServiceLocalDatabase {
         whereArgs: [id],
       );
     } catch (e) {
-      print('Erro ao deletar configuração ID $id: $e');
+      debugPrint('Erro ao deletar configuração ID $id: $e');
       rethrow;
+    }
+  }
+
+  /// Valida se existe um token válido no banco de dados
+  /// Retorna true se o token existe e não está expirado
+  /// Remove automaticamente tokens expirados
+  Future<bool> isTokenValid() async {
+    try {
+      final configs = await getAllConfiguracoes();
+      
+      if (configs.isEmpty) {
+        return false;
+      }
+      
+      final config = configs.first;
+      final dataExpiracao = DateTime.parse(config['data_expiracao']);
+      final agora = DateTime.now();
+      
+      // Se expirado, remove do banco
+      if (agora.isAfter(dataExpiracao)) {
+        await deleteConfiguracao(config['id_usuario']);
+        return false;
+      }
+      
+      return true;
+    } catch (e) {
+      debugPrint('Erro ao validar token: $e');
+      return false;
     }
   }
 
@@ -197,7 +225,7 @@ class ServiceLocalDatabase {
       checklist['sync'] = asynced ? 1 : 0;
       return await db.insert('checklist', checklist);
     } catch (e) {
-      print('Erro ao inserir checklist: $e');
+      debugPrint('Erro ao inserir checklist: $e');
       rethrow;
     }
   }
@@ -207,7 +235,7 @@ class ServiceLocalDatabase {
       final db = await instance.database;
       return await db.query('checklist');
     } catch (e) {
-      print('Erro ao buscar todos os checklists: $e');
+      debugPrint('Erro ao buscar todos os checklists: $e');
       rethrow;
     }
   }
@@ -222,7 +250,7 @@ class ServiceLocalDatabase {
       );
       return result.isNotEmpty ? result.first : null;
     } catch (e) {
-      print('Erro ao buscar checklist por ID $id: $e');
+      debugPrint('Erro ao buscar checklist por ID $id: $e');
       rethrow;
     }
   }
@@ -236,7 +264,7 @@ class ServiceLocalDatabase {
         whereArgs: [placa],
       );
     } catch (e) {
-      print('Erro ao buscar checklists por placa $placa: $e');
+      debugPrint('Erro ao buscar checklists por placa $placa: $e');
       rethrow;
     }
   }
@@ -251,7 +279,7 @@ class ServiceLocalDatabase {
         whereArgs: [id],
       );
     } catch (e) {
-      print('Erro ao atualizar checklist ID $id: $e');
+      debugPrint('Erro ao atualizar checklist ID $id: $e');
       rethrow;
     }
   }
@@ -265,7 +293,7 @@ class ServiceLocalDatabase {
         whereArgs: [id],
       );
     } catch (e) {
-      print('Erro ao deletar checklist ID $id: $e');
+      debugPrint('Erro ao deletar checklist ID $id: $e');
       rethrow;
     }
   }
@@ -278,7 +306,7 @@ class ServiceLocalDatabase {
       despesa['sync'] = asynced ? 1 : 0;
       return await db.insert('despesa', despesa);
     } catch (e) {
-      print('Erro ao inserir despesa: $e');
+      debugPrint('Erro ao inserir despesa: $e');
       rethrow;
     }
   }
@@ -288,7 +316,7 @@ class ServiceLocalDatabase {
       final db = await instance.database;
       return await db.query('despesa');
     } catch (e) {
-      print('Erro ao buscar todas as despesas: $e');
+      debugPrint('Erro ao buscar todas as despesas: $e');
       rethrow;
     }
   }
@@ -303,7 +331,7 @@ class ServiceLocalDatabase {
       );
       return result.isNotEmpty ? result.first : null;
     } catch (e) {
-      print('Erro ao buscar despesa por ID $id: $e');
+      debugPrint('Erro ao buscar despesa por ID $id: $e');
       rethrow;
     }
   }
@@ -317,7 +345,7 @@ class ServiceLocalDatabase {
         whereArgs: [tipo],
       );
     } catch (e) {
-      print('Erro ao buscar despesas por tipo $tipo: $e');
+      debugPrint('Erro ao buscar despesas por tipo $tipo: $e');
       rethrow;
     }
   }
@@ -331,7 +359,7 @@ class ServiceLocalDatabase {
         whereArgs: [dataInicio, dataFim],
       );
     } catch (e) {
-      print('Erro ao buscar despesas por período $dataInicio - $dataFim: $e');
+      debugPrint('Erro ao buscar despesas por período $dataInicio - $dataFim: $e');
       rethrow;
     }
   }
@@ -346,7 +374,7 @@ class ServiceLocalDatabase {
         whereArgs: [id],
       );
     } catch (e) {
-      print('Erro ao atualizar despesa ID $id: $e');
+      debugPrint('Erro ao atualizar despesa ID $id: $e');
       rethrow;
     }
   }
@@ -360,7 +388,7 @@ class ServiceLocalDatabase {
         whereArgs: [id],
       );
     } catch (e) {
-      print('Erro ao deletar despesa ID $id: $e');
+      debugPrint('Erro ao deletar despesa ID $id: $e');
       rethrow;
     }
   }
@@ -382,7 +410,7 @@ class ServiceLocalDatabase {
       abastecimento['sync'] = asynced ? 1 : 0;
       return await db.insert('abastecimento', abastecimento);
     } catch (e) {
-      print('Erro ao inserir abastecimento: $e');
+      debugPrint('Erro ao inserir abastecimento: $e');
       rethrow;
     }
   }
@@ -396,7 +424,7 @@ class ServiceLocalDatabase {
         limit: 5,
       );
     } catch (e) {
-      print('Erro ao buscar os últimos 5 abastecimentos: $e');
+      debugPrint('Erro ao buscar os últimos 5 abastecimentos: $e');
       rethrow;
     }
   }
@@ -411,7 +439,7 @@ class ServiceLocalDatabase {
       );
       return result.isNotEmpty ? result.first : null;
     } catch (e) {
-      print('Erro ao buscar abastecimento por ID $id: $e');
+      debugPrint('Erro ao buscar abastecimento por ID $id: $e');
       rethrow;
     }
   }
@@ -425,7 +453,7 @@ class ServiceLocalDatabase {
         whereArgs: [combustivel],
       );
     } catch (e) {
-      print('Erro ao buscar abastecimentos por combustível $combustivel: $e');
+      debugPrint('Erro ao buscar abastecimentos por combustível $combustivel: $e');
       rethrow;
     }
   }
@@ -439,7 +467,7 @@ class ServiceLocalDatabase {
         whereArgs: [dataInicio, dataFim],
       );
     } catch (e) {
-      print('Erro ao buscar abastecimentos por período $dataInicio - $dataFim: $e');
+      debugPrint('Erro ao buscar abastecimentos por período $dataInicio - $dataFim: $e');
       rethrow;
     }
   }
@@ -454,7 +482,7 @@ class ServiceLocalDatabase {
         whereArgs: [id],
       );
     } catch (e) {
-      print('Erro ao atualizar abastecimento ID $id: $e');
+      debugPrint('Erro ao atualizar abastecimento ID $id: $e');
       rethrow;
     }
   }
@@ -468,7 +496,7 @@ class ServiceLocalDatabase {
         whereArgs: [id],
       );
     } catch (e) {
-      print('Erro ao deletar abastecimento ID $id: $e');
+      debugPrint('Erro ao deletar abastecimento ID $id: $e');
       rethrow;
     }
   }
@@ -483,7 +511,7 @@ class ServiceLocalDatabase {
         whereArgs: [0],
       );
     } catch (e) {
-      print('Erro ao buscar dados não sincronizados da tabela $tabela: $e');
+      debugPrint('Erro ao buscar dados não sincronizados da tabela $tabela: $e');
       rethrow;
     }
   }
@@ -494,11 +522,11 @@ class ServiceLocalDatabase {
       return await db.update(
         tabela,
         {'sync': 1},
-        where: 'id_${tabela} = ?',
+        where: 'id_$tabela = ?',
         whereArgs: [id],
       );
     } catch (e) {
-      print('Erro ao marcar como sincronizado na tabela $tabela, ID $id: $e');
+      debugPrint('Erro ao marcar como sincronizado na tabela $tabela, ID $id: $e');
       rethrow;
     }
   }
@@ -508,7 +536,7 @@ class ServiceLocalDatabase {
       final db = await instance.database;
       await db.close();
     } catch (e) {
-      print('Erro ao fechar banco de dados: $e');
+      debugPrint('Erro ao fechar banco de dados: $e');
       rethrow;
     }
   }

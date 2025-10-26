@@ -49,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
         final configuracao = {
           'id_usuario': userId,
           'url_empresa': 'https://$company.simagestor.com.br/api',
-          'data_expiracao': DateTime.now().add(Duration(seconds: 30)).toIso8601String(),
+          'data_expiracao': DateTime.now().add(Duration(days: 7)).toIso8601String(),
           'token': token,
           'isAdmin': isAdmin ? 1 : 0,
         };
@@ -62,7 +62,9 @@ class _LoginPageState extends State<LoginPage> {
           await database.updateConfiguracao(userId, configuracao);
         }
 
-        Navigator.pushNamed(context, '/home');
+        if (mounted) {
+          Navigator.pushNamed(context, '/home');
+        }
 
       } catch (e) {
         setState(() {

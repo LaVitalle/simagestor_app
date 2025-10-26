@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/services/service_local_database.dart';
+import 'package:flutter/foundation.dart';
+import 'package:simagestor_app/services/service_local_database.dart';
 
 void main() {
   group('Testes de Tratamento de Erros - ServiceLocalDatabase', () {
@@ -28,7 +29,7 @@ void main() {
         } catch (e) {
           erroCapturado = true;
           mensagemErro = e.toString();
-          print('✅ Erro capturado corretamente: $e');
+          debugPrint('✅ Erro capturado corretamente: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado');
@@ -43,7 +44,7 @@ void main() {
           await dbService.getConfiguracaoById(-1);
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado ao buscar ID inválido: $e');
+          debugPrint('✅ Erro capturado ao buscar ID inválido: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado para ID inválido');
@@ -59,7 +60,7 @@ void main() {
           });
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado ao atualizar configuração inexistente: $e');
+          debugPrint('✅ Erro capturado ao atualizar configuração inexistente: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado para atualização');
@@ -83,7 +84,7 @@ void main() {
           });
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado ao inserir despesa inválida: $e');
+          debugPrint('✅ Erro capturado ao inserir despesa inválida: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado para dados inválidos');
@@ -96,7 +97,7 @@ void main() {
           await dbService.getDespesasByTipo('TipoInexistente');
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado ao buscar por tipo inexistente: $e');
+          debugPrint('✅ Erro capturado ao buscar por tipo inexistente: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado para busca por tipo');
@@ -109,7 +110,7 @@ void main() {
           await dbService.getDespesasByPeriodo('data_invalida', 'outra_data_invalida');
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado ao buscar por período inválido: $e');
+          debugPrint('✅ Erro capturado ao buscar por período inválido: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado para período inválido');
@@ -134,7 +135,7 @@ void main() {
           });
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado ao inserir abastecimento inválido: $e');
+          debugPrint('✅ Erro capturado ao inserir abastecimento inválido: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado para abastecimento inválido');
@@ -147,7 +148,7 @@ void main() {
           await dbService.getAbastecimentosByCombustivel('CombustivelInexistente');
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado ao buscar por combustível inexistente: $e');
+          debugPrint('✅ Erro capturado ao buscar por combustível inexistente: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado para combustível inexistente');
@@ -179,7 +180,7 @@ void main() {
           });
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado ao inserir checklist inválido: $e');
+          debugPrint('✅ Erro capturado ao inserir checklist inválido: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado para checklist inválido');
@@ -192,7 +193,7 @@ void main() {
           await dbService.getChecklistsByPlaca('PLACA_INEXISTENTE');
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado ao buscar por placa inexistente: $e');
+          debugPrint('✅ Erro capturado ao buscar por placa inexistente: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado para placa inexistente');
@@ -208,7 +209,7 @@ void main() {
           await dbService.getDadosNaoSincronizados('tabela_inexistente');
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado ao buscar dados de tabela inexistente: $e');
+          debugPrint('✅ Erro capturado ao buscar dados de tabela inexistente: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado para tabela inexistente');
@@ -221,7 +222,7 @@ void main() {
           await dbService.marcarComoSincronizado('tabela_inexistente', 1);
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado ao marcar sincronização em tabela inexistente: $e');
+          debugPrint('✅ Erro capturado ao marcar sincronização em tabela inexistente: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado para sincronização em tabela inexistente');
@@ -246,7 +247,7 @@ void main() {
             });
           } catch (e) {
             errosCapturados++;
-            print('✅ Erro $errosCapturados capturado: $e');
+            debugPrint('✅ Erro $errosCapturados capturado: $e');
           }
         }
 
@@ -271,7 +272,7 @@ void main() {
           });
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado para valor extremo: $e');
+          debugPrint('✅ Erro capturado para valor extremo: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado para valor extremo');
@@ -293,7 +294,7 @@ void main() {
           });
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado para string muito longa: $e');
+          debugPrint('✅ Erro capturado para string muito longa: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado para string muito longa');
@@ -310,7 +311,7 @@ void main() {
           await dbService.close(); // Tentar fechar novamente
         } catch (e) {
           erroCapturado = true;
-          print('✅ Erro capturado ao fechar banco já fechado: $e');
+          debugPrint('✅ Erro capturado ao fechar banco já fechado: $e');
         }
 
         expect(erroCapturado, isTrue, reason: 'Erro deveria ter sido capturado ao fechar banco já fechado');

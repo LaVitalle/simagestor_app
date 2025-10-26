@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:simagestor_app/services/service_local_database.dart';
 import 'package:simagestor_app/themes/app_colors.dart';
 
 class HomePage extends StatefulWidget {
@@ -8,7 +11,38 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  Timer? _tokenValidationTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _validateToken();
+    _startPeriodicValidation();
+  }
+
+  @override
+  void dispose() {
+    _tokenValidationTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startPeriodicValidation() {
+    _tokenValidationTimer = Timer.periodic(const Duration(minutes: 15), (timer) {
+      _validateToken();
+    });
+  }
+
+  Future<void> _validateToken() async {
+    final database = ServiceLocalDatabase.instance;
+    final isValid = await database.isTokenValid();
+    
+    if (!isValid && mounted) {
+      _tokenValidationTimer?.cancel(); // Para o timer antes de redirecionar
+      Navigator.pushReplacementNamed(context, '/login');
+    }
+  }
+
   void handleAbastecimento() {
     Navigator.pushNamed(context, '/fuel');
   }
