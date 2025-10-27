@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/checklist.dart';
 import '../services/checklist_service.dart';
-import 'checklist_detalhes_screen.dart';
-import 'checklist_form_screen.dart';
+import 'detalhes_checklist_page.dart';
+import 'form_checklist_page.dart';
 
 class ChecklistPage extends StatefulWidget {
     const ChecklistPage({super.key});
@@ -51,7 +51,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
                 onPressed: () async {
                     await Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const ChecklistFormScreen()),
+                        MaterialPageRoute(builder: (_) => const FormChecklistPage()),
                     );
                     _carregarChecklists(); // Atualiza lista ao voltar
                 },
@@ -88,7 +88,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
                                         Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                                builder: (_) => ChecklistDetalhesScreen(idChecklist: c.idChecklist),
+                                                builder: (_) => DetalhesChecklistPage(idChecklist: c.idChecklist),
                                             ),
                                         );
                                     },
