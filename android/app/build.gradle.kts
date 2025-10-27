@@ -7,8 +7,12 @@ plugins {
 
 android {
     namespace = "com.example.simagestor_app"
-    compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
+    
+    compileSdkVersion localProperties.getProperty('flutter.compileSdkVersion').toInteger()
+    //adicionar ao android/localProperties 
+    //flutter.compileSdkVersion=33
+    //para funcionar
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
