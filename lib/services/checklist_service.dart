@@ -1,74 +1,93 @@
+import 'package:simagestor_app/services/service_local_database.dart';
 import '../../models/checklist.dart';
 
 class ChecklistService {
-    static final List<Checklist> _checklistsMockados = [
-        Checklist(
-        idChecklist: 1,
-        placaVeiculo: 'BAA7E82',
-        motorista: 'João Silva',
-        freios: true,
-        pneus: false,
-        nivelOleo: false,
-        faroisLanternas: true,
-        documentosVeiculo: true,
-        cnhCondutor: true,
-        limpadoresParaBrisa: true,
-        cintoSeguranca: true,
-        fluidoArrefecimento: false,
-        suspensao: true,
-        campoAssinatura: 'assinatura_base64_aqui',
-        dataHora: DateTime(2025, 8, 29, 19, 30),
-        ),
-    ];
+    static final ServiceLocalDatabase _db = ServiceLocalDatabase.instance;
 
-    // Buscar todos os checklists
-    static Future<List<Checklist>> buscarChecklists() async {
-        await Future.delayed(const Duration(milliseconds: 800));
-        return List.from(_checklistsMockados);
+  static Future<List<Checklist>> buscarChecklists() async {
+    try {
+      final List<Map<String, dynamic>> results = await _db.getAllChecklists();
+      return results.map((json) => Checklist.fromJson(json)).toList();
+    } catch (e) {
+      throw Exception('Erro ao buscar Checklists: $e');
     }
+  }
 
-    // Buscar checklist por ID
-    static Future<Checklist> buscarChecklistPorId(int id) async {
-        await Future.delayed(const Duration(milliseconds: 400));
-        final checklist = _checklistsMockados.firstWhere(
-            (c) => c.idChecklist == id,
-            orElse: () => throw Exception('Checklist não encontrado'),
-        );
-        return checklist;
+  static Future<Checklist> buscarChecklistPorId(int id) async {
+    try {
+      final Map<String, dynamic>? result = await _db.getChecklistById(id);
+      if (result == null) {
+        throw Exception('Checklist não encontrada');
+      }
+      return Checklist.fromJson(result);
+    } catch (e) {
+      throw Exception('Erro ao buscar Checklist por ID $id: $e');
     }
+  }
 
-    // Adicionar novo checklist
-    static Future<Checklist> adicionarChecklist(Checklist novo) async {
-        await Future.delayed(const Duration(milliseconds: 800));
+  static Future<Checklist> adicionarChecklist(Checklist novaChecklist) async {
+    try {
+      final data = novaChecklist.toJson();
+      // Remove o id_checklist se for 0 (novo registro)
+      if (data['id_checklist'] == 0) {
+        data.remove('id_checklist');
+      }
 
-        final ultimoId = _checklistsMockados.isNotEmpty
-            ? _checklistsMockados.map((c) => c.idChecklist).reduce((a, b) => a > b ? a : b)
-            : 0;
+      final int id = await _db.insertChecklist(data);
 
-        final checklistComId = novo.copyWith(idChecklist: ultimoId + 1);
-
-        _checklistsMockados.insert(0, checklistComId);
-        return checklistComId;
+      // Retorna a Checklist com o ID gerado pelo banco
+      return Checklist(
+        idChecklist: id,
+        campoAssinatura: novaChecklist.campoAssinatura,
+        cintoSeguranca: novaChecklist.cintoSeguranca,
+        cnhCondutor: novaChecklist.cnhCondutor,
+        dataHora: novaChecklist.dataHora,
+        documentosVeiculo: novaChecklist.documentosVeiculo,
+        faroisLanternas: novaChecklist.faroisLanternas,
+        fluidoArrefecimento: novaChecklist.fluidoArrefecimento,
+        freios: novaChecklist.freios,
+        limpadoresParaBrisa: novaChecklist.limpadoresParaBrisa,
+        motorista: novaChecklist.motorista,
+        nivelOleo: novaChecklist.nivelOleo,
+        placaVeiculo: novaChecklist.placaVeiculo,
+        pneus: novaChecklist.pneus,
+        suspensao: novaChecklist.suspensao,
+      );
+    } catch (e) {
+      throw Exception('Erro ao adicionar Checklist: $e');
     }
+  }
 
-    // Atualizar checklist existente
-    static Future<Checklist> atualizarChecklist(Checklist atualizado) async {
-        await Future.delayed(const Duration(milliseconds: 600));
+  static Future<Checklist> atualizarChecklist(Checklist checklistAtualizada) async {
+    try {
+      final data = checklistAtualizada.toJson();
+      // Remove o id_checklist do update
+      data.remove('id_checklist');
 
-        final index = _checklistsMockados.indexWhere(
-            (c) => c.idChecklist == atualizado.idChecklist,
-        );
-        if (index == -1) throw Exception('Checklist não encontrado');
+      final int rowsAffected = await _db.updateChecklist(
+        checklistAtualizada.idChecklist,
+        data,
+      );
 
-        _checklistsMockados[index] = atualizado;
-        return atualizado;
+      if (rowsAffected == 0) {
+        throw Exception('Checklist não encontrada');
+      }
+
+      return checklistAtualizada;
+    } catch (e) {
+      throw Exception('Erro ao atualizar Checklist: $e');
     }
+  }
 
-    // Excluir checklist
-    static Future<void> excluirChecklist(int id) async {
-        await Future.delayed(const Duration(milliseconds: 400));
-        final index = _checklistsMockados.indexWhere((c) => c.idChecklist == id);
-        if (index == -1) throw Exception('Checklist não encontrado');
-        _checklistsMockados.removeAt(index);
+  static Future<void> excluirChecklist(int id) async {
+    try {
+      final int rowsAffected = await _db.deleteChecklist(id);
+
+      if (rowsAffected == 0) {
+        throw Exception('Checklist não encontrada');
+      }
+    } catch (e) {
+      throw Exception('Erro ao excluir Checklist: $e');
     }
+  }
 }
