@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:simagestor_app/screens/checklist/checklists_page.dart';
+import 'package:simagestor_app/screens/checklist/detalhes_checklist_page.dart';
+import 'package:simagestor_app/screens/checklist/form_checklist_page.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:simagestor_app/screens/login_page.dart';
 import 'package:simagestor_app/screens/home_page.dart';
@@ -11,6 +14,7 @@ import 'package:simagestor_app/screens/despesa/form_despesas_page.dart';
 import 'package:simagestor_app/screens/despesa/detalhes_despesa_page.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
   runApp(const MyApp());
@@ -46,6 +50,15 @@ class MyApp extends StatelessWidget {
           final idDespesa = args?['idDespesa'] as int? ?? 0;
           return DetalhesDespesaPage(idDespesa: idDespesa);
         },
+        '/checklists': (context) => ChecklistPage(),
+        '/detalhes-checklist': (context) {
+          final args =
+              ModalRoute.of(context)?.settings.arguments
+                  as Map<String, dynamic>?;
+          final idChecklist = args?['idChecklist'] as int? ?? 0;
+          return DetalhesChecklistPage(idChecklist: idChecklist);
+        },
+        '/form-checklist': (context) => FormChecklistPage(),
       },
     );
   }

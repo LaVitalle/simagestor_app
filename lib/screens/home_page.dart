@@ -54,7 +54,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   void handleChecklist() {
     debugPrint("Navegar para Checklist do Veículo");
-    // Exemplo: Navigator.pushNamed(context, '/checklist');
+    Navigator.pushNamed(context, '/checklists');
   }
 
   @override
