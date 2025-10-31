@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/checklist.dart';
-import '../services/checklist_service.dart';
+import '../../models/checklist.dart';
+import '../../services/checklist_service.dart';
 import 'detalhes_checklist_page.dart';
 import 'form_checklist_page.dart';
 

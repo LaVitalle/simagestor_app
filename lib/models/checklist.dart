@@ -18,7 +18,7 @@ class Checklist{
 
 
     Checklist({
-        required this.idChecklist
+        required this.idChecklist,
         required this.placaVeiculo,
         required this.motorista,
         required this.freios,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/checklist.dart';
-import '../services/checklist_service.dart';
+import '../../models/checklist.dart';
+import '../../services/checklist_service.dart';
 
 class DetalhesChecklistPage extends StatefulWidget {
   final int idChecklist;

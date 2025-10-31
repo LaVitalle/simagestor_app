@@ -1,3 +1,5 @@
+import '../../models/checklist.dart';
+
 class ChecklistService {
     static final List<Checklist> _checklistsMockados = [
         Checklist(
