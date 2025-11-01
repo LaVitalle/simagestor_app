@@ -104,9 +104,13 @@ class ServiceApi {
 
   Future<T> postFormDataWithAuth<T>(String path, Map<String, dynamic> fields) async {
     final formData = FormData.fromMap(fields);
+    final urlCompleta = _buildPath(path);
+    
+    debugPrint("POST FormData para: $urlCompleta");
+    debugPrint("Campos: $fields");
 
     final response = await _dio.post<T>(
-      _buildPath(path),
+      urlCompleta,
       data: formData,
       options: Options(
         headers: {"Authorization": "Bearer $token"},
@@ -151,5 +155,87 @@ class ServiceApi {
       ),
     );
     return response.data as T;
+  }
+
+  /// Busca vehicle_id pela placa do veículo
+  Future<String?> buscarVehicleIdPorPlaca(String placa) async {
+    try {
+      // Tenta vários endpoints possíveis
+      List<String> endpointsPossiveis = [
+        'api_veiculos.php',
+        'api_vehicles.php',
+        'api_veiculo.php',
+      ];
+      
+      for (String endpoint in endpointsPossiveis) {
+        try {
+          final response = await getWithAuth<Map<String, dynamic>>(
+            endpoint,
+            params: {'placa': placa.toUpperCase()},
+          );
+          
+          if (response.containsKey('data') && response['data'] != null) {
+            dynamic data = response['data'];
+            if (data is Map && data.containsKey('id')) {
+              return data['id'].toString();
+            } else if (data is List && data.isNotEmpty && data[0] is Map) {
+              return data[0]['id']?.toString();
+            }
+          } else if (response.containsKey('id')) {
+            return response['id'].toString();
+          }
+        } catch (e) {
+          // Continua tentando outros endpoints
+          continue;
+        }
+      }
+      
+      debugPrint("Não foi possível encontrar vehicle_id para a placa: $placa");
+      return null;
+    } catch (e) {
+      debugPrint("Erro ao buscar vehicle_id: $e");
+      return null;
+    }
+  }
+
+  /// Busca driver_id pelo nome do motorista
+  Future<String?> buscarDriverIdPorNome(String nome) async {
+    try {
+      // Tenta vários endpoints possíveis
+      List<String> endpointsPossiveis = [
+        'api_motoristas.php',
+        'api_drivers.php',
+        'api_motorista.php',
+      ];
+      
+      for (String endpoint in endpointsPossiveis) {
+        try {
+          final response = await getWithAuth<Map<String, dynamic>>(
+            endpoint,
+            params: {'nome': nome},
+          );
+          
+          if (response.containsKey('data') && response['data'] != null) {
+            dynamic data = response['data'];
+            if (data is Map && data.containsKey('id')) {
+              return data['id'].toString();
+            } else if (data is List && data.isNotEmpty && data[0] is Map) {
+              return data[0]['id']?.toString();
+            }
+          } else if (response.containsKey('id')) {
+            return response['id'].toString();
+          }
+        } catch (e) {
+          // Continua tentando outros endpoints
+          continue;
+        }
+      }
+      
+      debugPrint("Não foi possível encontrar driver_id para o motorista: $nome");
+      return null;
+    } catch (e) {
+      debugPrint("Erro ao buscar driver_id: $e");
+      return null;
+    }
   }
 }

@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:signature/signature.dart';
 import '../../models/checklist.dart';
 import '../../services/checklist_service.dart';
+import '../../themes/app_colors.dart';
 
 class FormChecklistPage extends StatefulWidget {
     const FormChecklistPage({super.key});
@@ -53,13 +54,13 @@ class _FormChecklistPageState extends State<FormChecklistPage> {
 
         return Card(
             margin: const EdgeInsets.symmetric(vertical: 8),
-            color: Colors.grey[900],
+            color: AppColors.inputBackground,
             child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                        Text(label, style: const TextStyle(fontSize: 16, color: Colors.white)),
+                        Text(label, style: const TextStyle(fontSize: 16, color: AppColors.title)),
                         const SizedBox(height: 8),
                         Row(
                             children: [
@@ -68,7 +69,7 @@ class _FormChecklistPageState extends State<FormChecklistPage> {
                                         value: true,
                                         groupValue: selecionado,
                                         onChanged: (v) => setState(() => campos[key] = v),
-                                        title: const Text("Ok", style: TextStyle(color: Colors.white)),
+                                        title: const Text("Ok", style: TextStyle(color: AppColors.title)),
                                     ),
                                 ),
                                 Expanded(
@@ -76,7 +77,7 @@ class _FormChecklistPageState extends State<FormChecklistPage> {
                                         value: false,
                                         groupValue: selecionado,
                                         onChanged: (v) => setState(() => campos[key] = v),
-                                        title: const Text("Não Ok", style: TextStyle(color: Colors.white)),
+                                        title: const Text("Não Ok", style: TextStyle(color: AppColors.title)),
                                     ),
                                 ),
                             ],
@@ -85,11 +86,14 @@ class _FormChecklistPageState extends State<FormChecklistPage> {
                             ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                     backgroundColor:
-                                        imagemAdicionada ? Colors.teal[300] : Colors.teal[700],
+                                        imagemAdicionada ? AppColors.primary.withValues(alpha: 0.5) : AppColors.primary,
+                                ),
+                                onPressed: () => _pickImage(key),
+                                child: Text(
+                                    imagemAdicionada ? "Foto adicionada" : "Adicionar foto",
+                                    style: const TextStyle(color: Colors.white),
+                                ),
                             ),
-                            onPressed: () => _pickImage(key),
-                            child: Text(imagemAdicionada ? "Foto adicionada" : "Adicionar foto"),
-                        ),
                     ],
                 ),
             ),
@@ -132,75 +136,134 @@ class _FormChecklistPageState extends State<FormChecklistPage> {
     @override
     Widget build(BuildContext context) {
         return Scaffold(
-            backgroundColor: Colors.black,
+            backgroundColor: AppColors.background,
             appBar: AppBar(
-                backgroundColor: Colors.teal[900],
-                title: const Text("SimageStor"),
-            ),
-            body: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                    children: [
-                        TextField(
-                            controller: placaController,
-                            decoration: const InputDecoration(
-                                labelText: "Placa do veículo",
-                                filled: true,
-                                fillColor: Colors.grey,
-                            ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextField(
-                            controller: motoristaController,
-                            decoration: const InputDecoration(
-                                labelText: "Motorista",
-                                filled: true,
-                                fillColor: Colors.grey,
-                            ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Campos dinâmicos
-                        _buildCampo("Freios", "freios"),
-                        _buildCampo("Pneus", "pneus"),
-                        _buildCampo("Nível de óleo", "nivelOleo"),
-                        _buildCampo("Faróis e lanternas", "faroisLanternas"),
-                        _buildCampo("Documentos do veículo", "documentosVeiculo"),
-                        _buildCampo("CNH do condutor", "cnhCondutor"),
-                        _buildCampo("Limpadores de para-brisa", "limpadoresParaBrisa"),
-                        _buildCampo("Cinto de segurança", "cintoSeguranca"),
-                        _buildCampo("Fluido de arrefecimento", "fluidoArrefecimento"),
-                        _buildCampo("Suspensão", "suspensao"),
-
-                        const SizedBox(height: 20),
-                        const Text("Assinatura", style: TextStyle(color: Colors.white)),
-                        Container(
-                            height: 150,
-                            color: Colors.grey[300],
-                            child: Signature(controller: _signatureController, backgroundColor: Colors.grey[300]!),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                                ElevatedButton(
-                                    onPressed: _signatureController.clear,
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
-                                    child: const Text("Limpar assinatura"),
-                                ),
-                            ],
-                        ),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                            onPressed: _salvarChecklist,
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.teal[700],
-                                minimumSize: const Size(double.infinity, 50),
-                            ),
-                            child: const Text("Salvar", style: TextStyle(fontSize: 18)),
-                        ),
-                    ],
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: Container(
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                    ),
                 ),
+                title: const Text(
+                    'Simagestor',
+                    style: TextStyle(
+                        color: AppColors.title,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                    ),
+                ),
+            ),
+            body: Column(
+                children: [
+                    // Título
+                    Container(
+                        margin: const EdgeInsets.all(16),
+                        child: const Text(
+                            'Novo checklist',
+                            style: TextStyle(
+                                color: AppColors.title,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w500,
+                            ),
+                        ),
+                    ),
+                    // Conteúdo com scroll
+                    Expanded(
+                        child: SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                            child: Column(
+                                children: [
+                                    TextField(
+                                        controller: placaController,
+                                        decoration: InputDecoration(
+                                            labelText: "Placa do veículo",
+                                            labelStyle: const TextStyle(color: AppColors.textInput),
+                                            filled: true,
+                                            fillColor: AppColors.inputBackground,
+                                            border: OutlineInputBorder(
+                                                borderRadius: BorderRadius.circular(8),
+                                                borderSide: BorderSide.none,
+                                            ),
+                                        ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    TextField(
+                                        controller: motoristaController,
+                                        decoration: InputDecoration(
+                                            labelText: "Motorista",
+                                            labelStyle: const TextStyle(color: AppColors.textInput),
+                                            filled: true,
+                                            fillColor: AppColors.inputBackground,
+                                            border: OutlineInputBorder(
+                                                borderRadius: BorderRadius.circular(8),
+                                                borderSide: BorderSide.none,
+                                            ),
+                                        ),
+                                    ),
+                                    const SizedBox(height: 20),
+
+                                    // Campos dinâmicos
+                                    _buildCampo("Freios", "freios"),
+                                    _buildCampo("Pneus", "pneus"),
+                                    _buildCampo("Nível de óleo", "nivelOleo"),
+                                    _buildCampo("Faróis e lanternas", "faroisLanternas"),
+                                    _buildCampo("Documentos do veículo", "documentosVeiculo"),
+                                    _buildCampo("CNH do condutor", "cnhCondutor"),
+                                    _buildCampo("Limpadores de para-brisa", "limpadoresParaBrisa"),
+                                    _buildCampo("Cinto de segurança", "cintoSeguranca"),
+                                    _buildCampo("Fluido de arrefecimento", "fluidoArrefecimento"),
+                                    _buildCampo("Suspensão", "suspensao"),
+
+                                    const SizedBox(height: 20),
+                                    const Text("Assinatura", style: TextStyle(color: AppColors.title, fontSize: 16)),
+                                    const SizedBox(height: 10),
+                                    Container(
+                                        height: 150,
+                                        decoration: BoxDecoration(
+                                            color: AppColors.inputBackground,
+                                            borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Signature(controller: _signatureController, backgroundColor: AppColors.inputBackground),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                            ElevatedButton(
+                                                onPressed: _signatureController.clear,
+                                                style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[600]),
+                                                child: const Text("Limpar assinatura", style: TextStyle(color: Colors.white)),
+                                            ),
+                                        ],
+                                    ),
+                                    const SizedBox(height: 32),
+
+                                    // Botão Salvar
+                                    SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton(
+                                            onPressed: _salvarChecklist,
+                                            style: ElevatedButton.styleFrom(
+                                                backgroundColor: AppColors.primary,
+                                                minimumSize: const Size(double.infinity, 50),
+                                            ),
+                                            child: const Text("Salvar", style: TextStyle(fontSize: 18)),
+                                        ),
+                                    ),
+
+                                    const SizedBox(height: 32),
+                                ],
+                            ),
+                        ),
+                    ),
+                ],
             ),
         );
     }

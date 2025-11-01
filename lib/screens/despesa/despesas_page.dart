@@ -152,22 +152,24 @@ class _DespesasPageState extends State<DespesasPage> {
           Expanded(child: _buildContent()),
 
           // Botão de nova despesa
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.all(16),
-            child: ElevatedButton(
-              onPressed: _novaDespesa,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+          SafeArea(
+            child: Container(
+              width: double.infinity,
+              margin: const EdgeInsets.all(16),
+              child: ElevatedButton(
+                onPressed: _novaDespesa,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-              ),
-              child: const Text(
-                'Nova despesa',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                child: const Text(
+                  'Nova despesa',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
               ),
             ),
           ),

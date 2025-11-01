@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/checklist.dart';
 import '../../services/checklist_service.dart';
+import '../../themes/app_colors.dart';
 import 'detalhes_checklist_page.dart';
 import 'form_checklist_page.dart';
 
@@ -40,13 +41,45 @@ class _ChecklistPageState extends State<ChecklistPage> {
     @override
     Widget build(BuildContext context) {
         return Scaffold(
-            backgroundColor: Colors.black,
+            backgroundColor: AppColors.background,
             appBar: AppBar(
-                title: const Text("SimageStor"),
-                backgroundColor: Colors.teal[900],
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: Container(
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                    ),
+                ),
+                title: const Text(
+                    'Simagestor',
+                    style: TextStyle(
+                        color: AppColors.title,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                    ),
+                ),
+                actions: [
+                    Container(
+                        margin: const EdgeInsets.only(right: 16),
+                        child: const Text(
+                            'Checklists',
+                            style: TextStyle(
+                                color: AppColors.title,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                            ),
+                        ),
+                    ),
+                ],
             ),
             floatingActionButton: FloatingActionButton(
-                backgroundColor: Colors.teal[700],
+                backgroundColor: AppColors.primary,
                 child: const Icon(Icons.add),
                 onPressed: () async {
                     await Navigator.push(
@@ -70,20 +103,20 @@ class _ChecklistPageState extends State<ChecklistPage> {
                     itemBuilder: (context, index) {
                         final c = checklists[index];
                         return Card(
-                            color: Colors.teal[900],
+                            color: AppColors.inputBackground,
                             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             child: ListTile(
                                 title: Text(
                                     c.placaVeiculo,
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(color: AppColors.title, fontWeight: FontWeight.bold),
                                 ),
                                 subtitle: Text(
                                     "Motorista: ${c.motorista}\n"
                                     "Data: ${c.dataHora.day}/${c.dataHora.month}/${c.dataHora.year}",
-                                    style: const TextStyle(color: Colors.white70),
+                                    style: const TextStyle(color: AppColors.text),
                                 ),
                                 trailing: IconButton(
-                                    icon: const Icon(Icons.remove_red_eye, color: Colors.white),
+                                    icon: const Icon(Icons.remove_red_eye, color: AppColors.title),
                                     onPressed: () {
                                         Navigator.push(
                                             context,

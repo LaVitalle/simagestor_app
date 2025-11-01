@@ -25,13 +25,14 @@ class ServiceLocalDatabase {
       final databaseFactory = databaseFactoryFfiWeb;
       final path = join(await getDatabasesPath(), filePath);
       return await databaseFactory.openDatabase(path, options: OpenDatabaseOptions(
-        version: 1,
+        version: 2,
         onCreate: _createDB,
+        onUpgrade: _onUpgrade,
       ));
     } else {
       final dbPath = await getDatabasesPath();
       final path = join(dbPath, filePath);
-      return await openDatabase(path, version: 1, onCreate: _createDB);
+      return await openDatabase(path, version: 2, onCreate: _createDB, onUpgrade: _onUpgrade);
     }
   }
 
@@ -63,6 +64,7 @@ class ServiceLocalDatabase {
         fluido_de_arrefecimento TEXT CHECK (fluido_de_arrefecimento IN ('ok', 'not_ok')),
         suspensao TEXT CHECK (suspensao IN ('ok', 'not_ok')),
         campo_assinatura TEXT,
+        data_hora TEXT NOT NULL,
         sync BOOLEAN NOT NULL,
         configuracoes_id_usuario INTEGER,
         FOREIGN KEY (configuracoes_id_usuario) REFERENCES configuracoes (id_usuario)
@@ -101,6 +103,22 @@ class ServiceLocalDatabase {
     ''');
   }
 
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Adicionar coluna data_hora na tabela checklist se não existir
+      try {
+        // Adiciona a coluna como nullable primeiro
+        await db.execute('ALTER TABLE checklist ADD COLUMN data_hora TEXT');
+        // Atualiza registros existentes com data padrão se houver
+        await db.execute("UPDATE checklist SET data_hora = ? WHERE data_hora IS NULL", 
+            [DateTime.now().toIso8601String()]);
+      } catch (e) {
+        // Ignora erro se a coluna já existir
+        debugPrint('Coluna data_hora já existe ou erro ao adicionar: $e');
+      }
+    }
+  }
+
   Future<bool> insertApiData(Model model, Map<String, dynamic> data) async {
     try {
       var hasInternet = await ServiceConnection.hasInternetConnection();
@@ -114,7 +132,7 @@ class ServiceLocalDatabase {
           await ServiceApi().loadConfigFromDatabase();
           
           // Limpar dados antes de enviar (mesma lógica da sincronização)
-          Map<String, dynamic> dadosLimpos = _serviceSync.limparDadosParaAPI(model, data);
+          Map<String, dynamic> dadosLimpos = await _serviceSync.limparDadosParaAPI(model, data);
           
           // Usar o mesmo método que a sincronização
           if (model == Model.combustivel) {
@@ -129,8 +147,9 @@ class ServiceLocalDatabase {
         _serviceSync.syncedModel[model] = false;
         return false;
       }
-    } catch (_) {
+    } catch (e) {
       _serviceSync.syncedModel[model] = false;
+      debugPrint('Erro ao enviar dados para API (${model.toString()}): $e');
       return false;
     }
   }
