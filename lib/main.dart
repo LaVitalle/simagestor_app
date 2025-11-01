@@ -12,11 +12,18 @@ import 'package:simagestor_app/models/fuel.dart';
 import 'package:simagestor_app/screens/despesa/despesas_page.dart';
 import 'package:simagestor_app/screens/despesa/form_despesas_page.dart';
 import 'package:simagestor_app/screens/despesa/detalhes_despesa_page.dart';
+import 'dart:io' show Platform;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
+  
+  // Apenas inicializar FFI em desktop (Windows, Linux, macOS)
+  // Android e iOS usam a implementação nativa do sqflite
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+  
   runApp(const MyApp());
 }
 

@@ -13,9 +13,9 @@ class ServiceSync {
 
   bool hasSomeAsyncedModel() {
     for (var isSynced in syncedModel.values) {
-      if(!isSynced) return false;
+      if(!isSynced) return true;  // Se encontrou algum não sincronizado, retorna true
     }
-    return false;
+    return false;  // Se todos estão sincronizados, retorna false
   }
 
   Future<void> syncAllModel() async {
@@ -55,7 +55,7 @@ class ServiceSync {
       for (int i = 0; i < datas.length; i++) {
         var data = datas[i];
         try {
-          Map<String, dynamic> dadosParaEnviar = _limparDadosParaAPI(model, data);
+          Map<String, dynamic> dadosParaEnviar = limparDadosParaAPI(model, data);
           
           if (model == Model.combustivel) {
             await ServiceApi().postJsonWithAuth(model.api, dadosParaEnviar);
@@ -94,7 +94,7 @@ class ServiceSync {
     }
   }
 
-  Map<String, dynamic> _limparDadosParaAPI(Model model, Map<String, dynamic> data) {
+  Map<String, dynamic> limparDadosParaAPI(Model model, Map<String, dynamic> data) {
     Map<String, dynamic> dadosLimpos = Map<String, dynamic>.from(data);
     
     switch (model) {

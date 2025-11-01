@@ -112,7 +112,17 @@ class ServiceLocalDatabase {
         } else {
           // Carregar configurações antes de enviar dados
           await ServiceApi().loadConfigFromDatabase();
-          await ServiceApi().postFormDataWithAuth(model.api, data);
+          
+          // Limpar dados antes de enviar (mesma lógica da sincronização)
+          Map<String, dynamic> dadosLimpos = _serviceSync.limparDadosParaAPI(model, data);
+          
+          // Usar o mesmo método que a sincronização
+          if (model == Model.combustivel) {
+            await ServiceApi().postJsonWithAuth(model.api, dadosLimpos);
+          } else {
+            await ServiceApi().postFormDataWithAuth(model.api, dadosLimpos);
+          }
+          
           return true;
         }
       } else {
