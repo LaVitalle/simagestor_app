@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:simagestor_app/services/service_local_database.dart';
 import 'package:simagestor_app/services/service_connection.dart';
 import 'package:simagestor_app/services/service_sync.dart';

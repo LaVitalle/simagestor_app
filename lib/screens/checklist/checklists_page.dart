@@ -100,58 +100,152 @@ class _ChecklistPageState extends State<ChecklistPage> {
                     ),
                 ],
             ),
-            floatingActionButton: FloatingActionButton(
-                backgroundColor: AppColors.primary,
-                child: const Icon(Icons.add),
-                onPressed: () async {
-                    await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const FormChecklistPage()),
-                    );
-                    _carregarChecklists(); // Atualiza lista ao voltar
-                },
-            ),
-            body: carregando
-            ? const Center(child: CircularProgressIndicator())
-            : erro != null
-                ? Center(
-                    child: Text(
-                        "Erro ao carregar: $erro",
-                        style: const TextStyle(color: Colors.redAccent),
+            body: Column(
+                children: [
+                    // Conteúdo principal
+                    Expanded(
+                        child: _buildContent(),
                     ),
-                )
-                : ListView.builder(
-                    itemCount: checklists.length,
-                    itemBuilder: (context, index) {
-                        final c = checklists[index];
-                        return Card(
-                            color: AppColors.inputBackground,
-                            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            child: ListTile(
-                                title: Text(
-                                    veiculosMap[c.vehicleId] ?? 'Veículo #${c.vehicleId}',
-                                    style: const TextStyle(color: AppColors.title, fontWeight: FontWeight.bold),
+                    
+                    // Botão de nova checklist
+                    SafeArea(
+                        child: Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.all(16),
+                            child: ElevatedButton(
+                                onPressed: _novaChecklist,
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                    ),
                                 ),
-                                subtitle: Text(
-                                    "Motorista: ${motoristasMap[c.driverId] ?? 'Motorista #${c.driverId}'}\n"
-                                    "Data: ${c.dataHora.day}/${c.dataHora.month}/${c.dataHora.year}",
-                                    style: const TextStyle(color: AppColors.text),
-                                ),
-                                trailing: IconButton(
-                                    icon: const Icon(Icons.remove_red_eye, color: AppColors.title),
-                                    onPressed: () {
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (_) => DetalhesChecklistPage(idChecklist: c.idChecklist),
-                                            ),
-                                        );
-                                    },
+                                child: const Text(
+                                    'Nova checklist',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                                 ),
                             ),
-                        );
-                    },
+                        ),
+                    ),
+                ],
+            ),
+        );
+    }
+
+    void _novaChecklist() async {
+        await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const FormChecklistPage()),
+        );
+        _carregarChecklists(); // Atualiza lista ao voltar
+    }
+
+    Widget _buildContent() {
+        if (carregando) {
+            return const Center(
+                child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
+            );
+        }
+
+        if (erro != null) {
+            return Center(
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 64),
+                        const SizedBox(height: 16),
+                        const Text(
+                            'Erro ao carregar checklists',
+                            style: TextStyle(
+                                color: AppColors.text,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                            ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                            erro!,
+                            style: const TextStyle(color: AppColors.text, fontSize: 14),
+                            textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                            onPressed: _carregarDados,
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Tentar novamente'),
+                        ),
+                    ],
+                ),
+            );
+        }
+
+        if (checklists.isEmpty) {
+            return const Center(
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                        Icon(Icons.checklist_outlined, color: AppColors.text, size: 64),
+                        SizedBox(height: 16),
+                        Text(
+                            'Nenhuma checklist encontrada',
+                            style: TextStyle(
+                                color: AppColors.text,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                            ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                            'Adicione sua primeira checklist',
+                            style: TextStyle(color: AppColors.text, fontSize: 14),
+                        ),
+                    ],
+                ),
+            );
+        }
+
+        return ListView.builder(
+            padding: const EdgeInsets.only(bottom: 16),
+            itemCount: checklists.length,
+            itemBuilder: (context, index) {
+                final c = checklists[index];
+                return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                        color: AppColors.inputBackground,
+                        borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ListTile(
+                        title: Text(
+                            veiculosMap[c.vehicleId] ?? 'Veículo #${c.vehicleId}',
+                            style: const TextStyle(color: AppColors.title, fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                            "Motorista: ${motoristasMap[c.driverId] ?? 'Motorista #${c.driverId}'}\n"
+                            "Data: ${c.dataHora.day}/${c.dataHora.month}/${c.dataHora.year}",
+                            style: const TextStyle(color: AppColors.text),
+                        ),
+                        trailing: IconButton(
+                            icon: const Icon(Icons.remove_red_eye, color: AppColors.title),
+                            onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) => DetalhesChecklistPage(idChecklist: c.idChecklist),
+                                    ),
+                                );
+                            },
+                        ),
+                    ),
+                );
+            },
         );
     }
 }
