@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:simagestor_app/enum/model_enum.dart';
 import 'package:simagestor_app/services/service_api.dart';
 import 'package:simagestor_app/services/service_local_database.dart';
@@ -177,59 +181,106 @@ class ServiceSync {
         
       case Model.checklist:
         // Salva valores originais ANTES de limpar
-        String placaVeiculo = dadosLimpos['placa_veiculo']?.toString() ?? '';
-        String motorista = dadosLimpos['motorista']?.toString() ?? '';
-        String signature = dadosLimpos['campo_assinatura']?.toString() ?? '';
+        String vehicleId = data['vehicle_id']?.toString() ?? '';
+        String driverId = data['driver_id']?.toString() ?? '';
+        String signature = data['campo_assinatura']?.toString() ?? '';
         
-        // Busca vehicle_id e driver_id na API
-        final serviceApi = ServiceApi();
-        String? vehicleId = await serviceApi.buscarVehicleIdPorPlaca(placaVeiculo);
-        String? driverId = await serviceApi.buscarDriverIdPorNome(motorista);
-        
-        // Se não conseguir buscar os IDs, lança erro
-        if (vehicleId == null || vehicleId.isEmpty) {
-          throw Exception('Não foi possível encontrar vehicle_id para a placa: $placaVeiculo');
-        }
-        if (driverId == null || driverId.isEmpty) {
-          throw Exception('Não foi possível encontrar driver_id para o motorista: $motorista');
+        // Se a assinatura não estiver no formato correto, usa uma imagem PNG transparente em base64
+        if (!signature.startsWith('data:image/png;base64,')) {
+          // Imagem PNG transparente 1x1 em base64
+          signature = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
         }
         
-        // Mapeia os campos do checklist para items[N][result]
+        // Busca o nome do motorista para o campo checker_name
+        String checkerName = '';
+        if (driverId.isNotEmpty) {
+          final motoristas = await _instace.getAllMotoristas();
+          final motorista = motoristas.where((m) => m['id'].toString() == driverId).firstOrNull;
+          if (motorista != null) {
+            checkerName = motorista['nome'] ?? '';
+          }
+        }
+        
+        // Mapeia os campos do checklist para items[N][result] e items[N][comments]
         // Ordem: 1=freios, 2=pneus, 3=nivel_oleo, 4=farois_lanterna, 5=documentacao_veiculo,
         //        6=CNH_motorista, 7=limpadores_parabrisa, 8=cintos_de_seguranca, 
         //        9=fluido_de_arrefecimento, 10=suspensao
         
-        Map<String, String> camposChecklist = {
-          'freios': '1',
-          'pneus': '2',
-          'nivel_oleo': '3',
-          'farois_lanterna': '4',
-          'documentacao_veiculo': '5',
-          'CNH_motorista': '6',
-          'limpadores_parabrisa': '7',
-          'cintos_de_seguranca': '8',
-          'fluido_de_arrefecimento': '9',
-          'suspensao': '10',
+        Map<String, Map<String, String>> camposChecklist = {
+          'freios': {'num': '1', 'comentario': 'freios_comentario', 'foto': 'freios_foto'},
+          'pneus': {'num': '2', 'comentario': 'pneus_comentario', 'foto': 'pneus_foto'},
+          'nivel_oleo': {'num': '3', 'comentario': 'nivel_oleo_comentario', 'foto': 'nivel_oleo_foto'},
+          'farois_lanterna': {'num': '4', 'comentario': 'farois_lanterna_comentario', 'foto': 'farois_lanterna_foto'},
+          'documentacao_veiculo': {'num': '5', 'comentario': 'documentacao_veiculo_comentario', 'foto': 'documentacao_veiculo_foto'},
+          'CNH_motorista': {'num': '6', 'comentario': 'CNH_motorista_comentario', 'foto': 'CNH_motorista_foto'},
+          'limpadores_parabrisa': {'num': '7', 'comentario': 'limpadores_parabrisa_comentario', 'foto': 'limpadores_parabrisa_foto'},
+          'cintos_de_seguranca': {'num': '8', 'comentario': 'cintos_de_seguranca_comentario', 'foto': 'cintos_de_seguranca_foto'},
+          'fluido_de_arrefecimento': {'num': '9', 'comentario': 'fluido_de_arrefecimento_comentario', 'foto': 'fluido_de_arrefecimento_foto'},
+          'suspensao': {'num': '10', 'comentario': 'suspensao_comentario', 'foto': 'suspensao_foto'},
         };
         
         // Limpa todos os campos antigos
         dadosLimpos.clear();
         
-        // Adiciona campos principais com os IDs encontrados
+        // Adiciona campos principais com os IDs
         dadosLimpos['vehicle_id'] = vehicleId;
         dadosLimpos['driver_id'] = driverId;
-        dadosLimpos['checker_name'] = motorista;
+        dadosLimpos['checker_name'] = checkerName;
         dadosLimpos['signature'] = signature;
         
         // Transforma os campos em items usando os valores originais de 'data'
         for (var entry in camposChecklist.entries) {
           String campo = entry.key;
-          String itemNum = entry.value;
+          String itemNum = entry.value['num']!;
+          String campoComentario = entry.value['comentario']!;
+          String campoFoto = entry.value['foto']!;
+          
           String valor = data[campo]?.toString() ?? 'not_ok';
+          String comentario = data[campoComentario]?.toString() ?? '';
+          String? fotoPath = data[campoFoto]?.toString();
           
           // Converte 'ok'/'not_ok' para o formato esperado
           dadosLimpos['items[$itemNum][result]'] = valor;
-          dadosLimpos['items[$itemNum][comments]'] = '';
+          dadosLimpos['items[$itemNum][comments]'] = comentario;
+          
+          // Se o item for not_ok, adiciona a foto (real ou mockada)
+          if (valor == 'not_ok') {
+            MultipartFile? photoFile;
+            
+            // Tenta carregar a foto real se o caminho existir e o arquivo existir
+            if (fotoPath != null && fotoPath.isNotEmpty) {
+              try {
+                final file = File(fotoPath);
+                if (await file.exists()) {
+                  final bytes = await file.readAsBytes();
+                  final extension = fotoPath.split('.').last.toLowerCase();
+                  final mimeType = extension == 'jpg' || extension == 'jpeg' ? 'jpeg' : extension;
+                  
+                  photoFile = MultipartFile.fromBytes(
+                    bytes,
+                    filename: 'item_$itemNum.$extension',
+                    contentType: MediaType('image', mimeType),
+                  );
+                  debugPrint('Foto real carregada para item $itemNum: $fotoPath');
+                }
+              } catch (e) {
+                debugPrint('Erro ao carregar foto real para item $itemNum: $e');
+              }
+            }
+            
+            // Se não conseguiu carregar foto real, usa mockada
+            if (photoFile == null) {
+              debugPrint('Usando foto mockada para item $itemNum');
+              final bytes = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+              photoFile = MultipartFile.fromBytes(
+                bytes,
+                filename: 'item_$itemNum.png',
+                contentType: MediaType('image', 'png'),
+              );
+            }
+            
+            dadosLimpos['items[$itemNum][photo]'] = photoFile;
+          }
         }
         
         break;

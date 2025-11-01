@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/checklist.dart';
 import '../../services/checklist_service.dart';
+import '../../services/service_local_database.dart';
 import '../../themes/app_colors.dart';
 import 'detalhes_checklist_page.dart';
 import 'form_checklist_page.dart';
@@ -14,29 +15,50 @@ class ChecklistPage extends StatefulWidget {
 
 class _ChecklistPageState extends State<ChecklistPage> {
     List<Checklist> checklists = [];
+    Map<int, String> veiculosMap = {};
+    Map<int, String> motoristasMap = {};
     bool carregando = true;
     String? erro;
 
     @override
     void initState() {
         super.initState();
-        _carregarChecklists();
+        _carregarDados();
+    }
+
+    Future<void> _carregarDados() async {
+        try {
+            final db = ServiceLocalDatabase.instance;
+            
+            // Carrega veículos e motoristas
+            final veiculos = await db.getAllVeiculos();
+            final motoristas = await db.getAllMotoristas();
+            
+            // Cria mapas de ID para nome/placa
+            for (var veiculo in veiculos) {
+                veiculosMap[veiculo['id']] = veiculo['placa'];
+            }
+            for (var motorista in motoristas) {
+                motoristasMap[motorista['id']] = motorista['nome'];
+            }
+            
+            // Carrega checklists
+            final dados = await ChecklistService.buscarChecklists();
+            setState(() {
+                checklists = dados;
+                carregando = false;
+            });
+        } catch (e) {
+            setState(() {
+                erro = e.toString();
+                carregando = false;
+            });
+        }
     }
 
     Future<void> _carregarChecklists() async {
-    try {
-        final dados = await ChecklistService.buscarChecklists();
-        setState(() {
-            checklists = dados;
-            carregando = false;
-        });
-    } catch (e) {
-        setState(() {
-            erro = e.toString();
-            carregando = false;
-        });
+        await _carregarDados();
     }
-  }
 
     @override
     Widget build(BuildContext context) {
@@ -107,11 +129,11 @@ class _ChecklistPageState extends State<ChecklistPage> {
                             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             child: ListTile(
                                 title: Text(
-                                    c.placaVeiculo,
+                                    veiculosMap[c.vehicleId] ?? 'Veículo #${c.vehicleId}',
                                     style: const TextStyle(color: AppColors.title, fontWeight: FontWeight.bold),
                                 ),
                                 subtitle: Text(
-                                    "Motorista: ${c.motorista}\n"
+                                    "Motorista: ${motoristasMap[c.driverId] ?? 'Motorista #${c.driverId}'}\n"
                                     "Data: ${c.dataHora.day}/${c.dataHora.month}/${c.dataHora.year}",
                                     style: const TextStyle(color: AppColors.text),
                                 ),

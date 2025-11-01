@@ -62,6 +62,10 @@ class _LoginPageState extends State<LoginPage> {
           await database.updateConfiguracao(userId, configuracao);
         }
 
+        // Sincroniza veículos e motoristas da API
+        debugPrint('Sincronizando veículos e motoristas...');
+        await database.syncVeiculosEMotoristasFromAPI();
+
         if (mounted) {
           Navigator.pushNamed(context, '/home');
         }
