@@ -21,6 +21,7 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
   String? _tipoDespesaSelecionado;
   String? _recorrenteSelecionado;
   bool _isLoading = false;
+  int _observacaoCaracteres = 0;
 
   final List<String> _tiposDespesa = [
     'Pedágio',
@@ -41,10 +42,18 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
   void initState() {
     super.initState();
     _dataController.text = _formatarData(DateTime.now());
+    _observacaoController.addListener(_atualizarContadorObservacao);
+  }
+
+  void _atualizarContadorObservacao() {
+    setState(() {
+      _observacaoCaracteres = _observacaoController.text.length;
+    });
   }
 
   @override
   void dispose() {
+    _observacaoController.removeListener(_atualizarContadorObservacao);
     _placaController.dispose();
     _dataController.dispose();
     _valorController.dispose();
@@ -102,8 +111,8 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
   }
 
   String? _validarObservacao(String? value) {
-    if (value != null && value.trim().length > 45) {
-      return 'Observação deve ter no máximo 45 caracteres';
+    if (value != null && value.trim().length > 200) {
+      return 'Observação deve ter no máximo 200 caracteres';
     }
     return null;
   }
@@ -396,12 +405,26 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
 
                     const SizedBox(height: 16),
 
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '$_observacaoCaracteres/200',
+                        style: TextStyle(
+                          color: _observacaoCaracteres > 200
+                              ? Colors.red
+                              : AppColors.textInput.withOpacity(0.6),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
                     // Observação
                     TextFormField(
                       controller: _observacaoController,
                       validator: _validarObservacao,
                       maxLines: 3,
+                      maxLength: 200,
                       style: const TextStyle(color: AppColors.textInput),
+                      inputFormatters: [LengthLimitingTextInputFormatter(200)],
                       decoration: InputDecoration(
                         hintText: 'Observação',
                         hintStyle: const TextStyle(color: AppColors.textInput),
@@ -412,6 +435,7 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.all(16),
+                        counterText: '', // Remove o contador padrão
                       ),
                     ),
 
@@ -450,6 +474,11 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
                               ),
                       ),
                     ),
+
+                    const SizedBox(height: 8),
+
+                    // Contador de caracteres da observação
+                    
 
                     const SizedBox(height: 32),
                   ],

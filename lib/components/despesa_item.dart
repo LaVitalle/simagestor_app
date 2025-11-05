@@ -29,7 +29,7 @@ class DespesaItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  despesa.idFormatado,
+                  despesa.placa,
                   style: const TextStyle(
                     color: AppColors.text,
                     fontSize: 16,

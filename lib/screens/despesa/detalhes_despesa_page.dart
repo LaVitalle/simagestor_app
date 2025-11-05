@@ -53,7 +53,7 @@ class _DetalhesDespesaPageState extends State<DetalhesDespesaPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
+            width: 160,
             child: Text(
               '$label:',
               style: const TextStyle(
@@ -174,7 +174,7 @@ class _DetalhesDespesaPageState extends State<DetalhesDespesaPage> {
           // ID da despesa
           Center(
             child: Text(
-              _despesa!.idFormatado,
+              _despesa!.placa,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 32,
