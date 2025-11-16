@@ -13,9 +13,7 @@ class FuelPage extends StatefulWidget {
 }
 
 class _FuelPageState extends State<FuelPage> {
-  final TextEditingController _searchController = TextEditingController();
   List<FuelModel> _fuelRecords = [];
-  List<FuelModel> _filteredRecords = [];
 
   @override
   void initState() {
@@ -37,23 +35,7 @@ class _FuelPageState extends State<FuelPage> {
         total: (item['total_RS'] is double) ? item['total_RS'] : double.tryParse(item['total_RS']?.toString() ?? '') ?? 0.0,
       );
     }).toList();
-    setState(() {
-      _filteredRecords = List.from(_fuelRecords);
-    });
-  }
-
-  void _filterRecords(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filteredRecords = List.from(_fuelRecords);
-      } else {
-        _filteredRecords = _fuelRecords.where((record) {
-          return record.id.toLowerCase().contains(query.toLowerCase()) ||
-                 record.plate.toLowerCase().contains(query.toLowerCase()) ||
-                 record.fuel.toLowerCase().contains(query.toLowerCase());
-        }).toList();
-      }
-    });
+    setState(() {});
   }
 
   void _navigateBack() {
@@ -109,7 +91,7 @@ class _FuelPageState extends State<FuelPage> {
           Container(
             margin: const EdgeInsets.only(right: 16),
             child: const Text(
-              'Últimos 5 abastecimentos',
+              'Abastecimentos',
               style: TextStyle(
                 color: AppColors.title,
                 fontSize: 16,
@@ -121,30 +103,6 @@ class _FuelPageState extends State<FuelPage> {
       ),
       body: Column(
         children: [
-          // Barra de pesquisa
-          Container(
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.inputBackground,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _filterRecords,
-              style: const TextStyle(color: AppColors.textInput),
-              decoration: const InputDecoration(
-                hintText: 'Pesquisar',
-                hintStyle: TextStyle(color: AppColors.textInput),
-                prefixIcon: Icon(Icons.search, color: AppColors.textInput),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ),
-          
           // Conteúdo principal
           Expanded(
             child: _buildContent(),
@@ -178,7 +136,7 @@ class _FuelPageState extends State<FuelPage> {
   }
 
   Widget _buildContent() {
-    if (_filteredRecords.isEmpty) {
+    if (_fuelRecords.isEmpty) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -205,9 +163,9 @@ class _FuelPageState extends State<FuelPage> {
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      itemCount: _filteredRecords.length,
+      itemCount: _fuelRecords.length,
       itemBuilder: (context, index) {
-        final record = _filteredRecords[index];
+        final record = _fuelRecords[index];
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(

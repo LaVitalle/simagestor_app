@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:simagestor_app/models/despesa.dart';
 import 'package:simagestor_app/services/despesa_service.dart';
+import 'package:simagestor_app/services/service_local_database.dart';
 import 'package:simagestor_app/themes/app_colors.dart';
 
 class FormDespesasPage extends StatefulWidget {
@@ -23,6 +24,11 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
   bool _isLoading = false;
   int _observacaoCaracteres = 0;
 
+  // Veículos para seleção de placa
+  List<Map<String, dynamic>> _veiculos = [];
+  int? _veiculoSelecionadoId;
+  bool _carregandoVeiculos = true;
+
   final List<String> _tiposDespesa = [
     'Pedágio',
     'Estacionamento',
@@ -43,6 +49,22 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
     super.initState();
     _dataController.text = _formatarData(DateTime.now());
     _observacaoController.addListener(_atualizarContadorObservacao);
+    _carregarVeiculos();
+  }
+
+  Future<void> _carregarVeiculos() async {
+    try {
+      final db = ServiceLocalDatabase.instance;
+      final veiculosList = await db.getAllVeiculos();
+      setState(() {
+        _veiculos = veiculosList;
+        _carregandoVeiculos = false;
+      });
+    } catch (_) {
+      setState(() {
+        _carregandoVeiculos = false;
+      });
+    }
   }
 
   void _atualizarContadorObservacao() {
@@ -61,16 +83,32 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
     super.dispose();
   }
 
-  String _formatarData(DateTime data) {
-    return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
-  }
+String _formatarData(DateTime data) {
+  return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
+}
 
-  String? _validarPlaca(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Placa do veículo é obrigatória';
+DateTime _parseData(String dataStr) {
+  // Espera formato dd/MM/yyyy vindo do campo de texto
+  try {
+    final partes = dataStr.split('/');
+    if (partes.length == 3) {
+      final dia = int.parse(partes[0]);
+      final mes = int.parse(partes[1]);
+      final ano = int.parse(partes[2]);
+      return DateTime(ano, mes, dia);
     }
-    if (value.trim().length < 7) {
-      return 'Placa deve ter pelo menos 7 caracteres';
+  } catch (_) {
+    // Em caso de erro, retorna a data atual para não quebrar o fluxo
+  }
+  return DateTime.now();
+}
+
+  String? _validarPlacaDropdown(int? value) {
+    if (_carregandoVeiculos) {
+      return 'Carregando veículos...';
+    }
+    if (value == null) {
+      return 'Placa do veículo é obrigatória';
     }
     return null;
   }
@@ -122,20 +160,7 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: AppColors.inputBackground,
-              onSurface: AppColors.textInput,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      lastDate: DateTime(2100),
     );
 
     if (dataSelecionada != null) {
@@ -158,7 +183,7 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
         valor: double.parse(_valorController.text.replaceAll(',', '.')),
         placa: _placaController.text.trim(),
         observacao: _observacaoController.text.trim(),
-        dataHora: DateTime.now(), // Usar data atual por enquanto
+        dataHora: _parseData(_dataController.text),
         recorrente: _recorrenteSelecionado == 'Sim',
         tipoDespesa: _tipoDespesaSelecionado!,
         configuracoesIdUsuario: 1, // ID do usuário atual (mockado)
@@ -286,17 +311,10 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
                   children: [
                     const SizedBox(height: 20),
 
-                    // Placa do veículo
-                    TextFormField(
-                      controller: _placaController,
-                      validator: _validarPlaca,
-                      style: const TextStyle(color: AppColors.textInput),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'[A-Za-z0-9\-]'),
-                        ),
-                        LengthLimitingTextInputFormatter(8),
-                      ],
+                    // Placa do veículo (selecionar veículo)
+                    DropdownButtonFormField<int>(
+                      value: _veiculoSelecionadoId,
+                      isExpanded: true,
                       decoration: InputDecoration(
                         hintText: 'Placa do veículo',
                         hintStyle: const TextStyle(color: AppColors.textInput),
@@ -311,6 +329,31 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
                           vertical: 12,
                         ),
                       ),
+                      dropdownColor: AppColors.inputBackground,
+                      icon: const Icon(Icons.arrow_drop_down, color: AppColors.textInput),
+                      style: const TextStyle(color: AppColors.textInput),
+                      items: _veiculos.map((veiculo) {
+                        final id = veiculo['id'] as int;
+                        final placa = veiculo['placa']?.toString() ?? '';
+                        return DropdownMenuItem<int>(
+                          value: id,
+                          child: Text(
+                            placa,
+                            style: const TextStyle(color: AppColors.textInput),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _veiculoSelecionadoId = value;
+                          final veiculo = _veiculos.firstWhere(
+                            (v) => v['id'] == value,
+                            orElse: () => {},
+                          );
+                          _placaController.text = veiculo['placa']?.toString() ?? '';
+                        });
+                      },
+                      validator: _validarPlacaDropdown,
                     ),
 
                     const SizedBox(height: 16),

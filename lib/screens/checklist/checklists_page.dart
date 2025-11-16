@@ -30,11 +30,11 @@ class _ChecklistPageState extends State<ChecklistPage> {
         try {
             final db = ServiceLocalDatabase.instance;
             
-            // Carrega veículos e motoristas
+            // Carrega veículos (placas) e motoristas
             final veiculos = await db.getAllVeiculos();
             final motoristas = await db.getAllMotoristas();
             
-            // Cria mapas de ID para nome/placa
+            // Cria mapas de ID para placa e nome
             for (var veiculo in veiculos) {
                 veiculosMap[veiculo['id']] = veiculo['placa'];
             }
@@ -212,40 +212,95 @@ class _ChecklistPageState extends State<ChecklistPage> {
         }
 
         return ListView.builder(
-            padding: const EdgeInsets.only(bottom: 16),
-            itemCount: checklists.length,
-            itemBuilder: (context, index) {
-                final c = checklists[index];
-                return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                        color: AppColors.inputBackground,
-                        borderRadius: BorderRadius.circular(8),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          itemCount: checklists.length,
+          itemBuilder: (context, index) {
+            final c = checklists[index];
+            final placa = veiculosMap[c.vehicleId] ?? 'Placa #${c.vehicleId}';
+            final motorista = motoristasMap[c.driverId] ?? 'Motorista #${c.driverId}';
+            final data =
+                '${c.dataHora.day.toString().padLeft(2, '0')}/${c.dataHora.month.toString().padLeft(2, '0')}/${c.dataHora.year}';
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFF404040),
+                  width: 1,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Placa: $placa',
+                            style: const TextStyle(
+                              color: AppColors.text,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: ListTile(
-                        title: Text(
-                            veiculosMap[c.vehicleId] ?? 'Veículo #${c.vehicleId}',
-                            style: const TextStyle(color: AppColors.title, fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                            "Motorista: ${motoristasMap[c.driverId] ?? 'Motorista #${c.driverId}'}\n"
-                            "Data: ${c.dataHora.day}/${c.dataHora.month}/${c.dataHora.year}",
-                            style: const TextStyle(color: AppColors.text),
-                        ),
-                        trailing: IconButton(
-                            icon: const Icon(Icons.remove_red_eye, color: AppColors.title),
-                            onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => DetalhesChecklistPage(idChecklist: c.idChecklist),
-                                    ),
-                                );
-                            },
-                        ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Motorista: $motorista',
+                      style: const TextStyle(
+                        color: AppColors.text,
+                        fontSize: 14,
+                      ),
                     ),
-                );
-            },
+                    const SizedBox(height: 4),
+                    Text(
+                      'Data: $data',
+                      style: const TextStyle(
+                        color: AppColors.text,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  DetalhesChecklistPage(idChecklist: c.idChecklist),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        ),
+                        child: const Text(
+                          'Visualizar',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
     }
 }

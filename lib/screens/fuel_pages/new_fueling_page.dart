@@ -23,11 +23,18 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
   final TextEditingController _litersController = TextEditingController();
   final TextEditingController _totalController = TextEditingController();
 
+  bool _isSaving = false;
+
   // Lista de tipos de combustível
   final List<String> _fuelTypes = ['Gasolina', 'Etanol', 'Diesel', 'GNV'];
   String? _selectedFuelType;
 
   final ServiceSync _serviceSync = ServiceSync();
+
+  // Veículos para seleção de placa
+  List<Map<String, dynamic>> _veiculos = [];
+  int? _selectedVehicleId;
+  bool _isLoadingVeiculos = true;
 
   @override
   void initState() {
@@ -38,6 +45,23 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
     // Listeners para cálculo automático
     _valuePerLiterController.addListener(_calculateTotal);
     _litersController.addListener(_calculateTotal);
+
+    _loadVeiculos();
+  }
+
+  Future<void> _loadVeiculos() async {
+    try {
+      final db = ServiceLocalDatabase.instance;
+      final veiculosList = await db.getAllVeiculos();
+      setState(() {
+        _veiculos = veiculosList;
+        _isLoadingVeiculos = false;
+      });
+    } catch (_) {
+      setState(() {
+        _isLoadingVeiculos = false;
+      });
+    }
   }
 
   String _formatDate(DateTime date) {
@@ -105,20 +129,7 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: AppColors.inputBackground,
-              onSurface: AppColors.textInput,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      lastDate: DateTime(2100),
     );
     
     if (picked != null) {
@@ -128,8 +139,14 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
     }
   }
 
-  void _saveFueling() async {
+  Future<void> _saveFueling() async {
+    if (_isSaving) return;
+
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isSaving = true;
+      });
+
       final abastecimento = {
         'placa': _plateController.text,
         'data_hora': _parseDate(_dateController.text),
@@ -178,6 +195,12 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
             ),
           );
         }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSaving = false;
+          });
+        }
       }
     }
   }
@@ -217,18 +240,12 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
                     // Botão Voltar
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2C4747),
+                        color: AppColors.primary,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: TextButton(
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
                         onPressed: _navigateBack,
-                        child: const Text(
-                          'Voltar',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
                       ),
                     ),
                     const Spacer(),
@@ -272,16 +289,58 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Column(
                     children: [
-                      // Placa do veículo
-                      _buildTextField(
-                        controller: _plateController,
-                        label: 'Placa do veículo',
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Digite a placa do veículo';
-                          }
-                          return null;
-                        },
+                      // Placa do veículo (selecionar veículo)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF324B4B),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: DropdownButtonFormField<int>(
+                          value: _selectedVehicleId,
+                          isExpanded: true,
+                          dropdownColor: const Color(0xFF324B4B),
+                          decoration: const InputDecoration(
+                            labelText: 'Placa do veículo',
+                            labelStyle: TextStyle(color: AppColors.textInput),
+                            border: InputBorder.none,
+                          ),
+                          items: _veiculos.map((veiculo) {
+                            final id = veiculo['id'] as int;
+                            final placa = veiculo['placa']?.toString() ?? '';
+                            return DropdownMenuItem<int>(
+                              value: id,
+                              child: Text(
+                                placa,
+                                style: const TextStyle(color: AppColors.textInput),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedVehicleId = value;
+                              final veiculo = _veiculos.firstWhere(
+                                (v) => v['id'] == value,
+                                orElse: () => {},
+                              );
+                              _plateController.text = veiculo['placa']?.toString() ?? '';
+                            });
+                          },
+                          validator: (value) {
+                            if (_isLoadingVeiculos) {
+                              return 'Carregando veículos...';
+                            }
+                            if (value == null) {
+                              return 'Selecione um veículo';
+                            }
+                            return null;
+                          },
+                          icon: const Icon(
+                            Icons.arrow_drop_down,
+                            color: AppColors.textInput,
+                          ),
+                          style: const TextStyle(color: AppColors.textInput),
+                        ),
                       ),
 
                       const SizedBox(height: 16),
@@ -389,7 +448,7 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _saveFueling,
+                          onPressed: _isSaving ? null : _saveFueling,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF00796B),
                             shape: RoundedRectangleBorder(
@@ -397,14 +456,23 @@ class _NewFuelingPageState extends State<NewFuelingPage> {
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          child: const Text(
-                            'Salvar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: _isSaving
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : const Text(
+                                  'Salvar',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ),
 

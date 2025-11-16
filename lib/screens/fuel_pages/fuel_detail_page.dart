@@ -37,18 +37,12 @@ class FuelDetailPage extends StatelessWidget {
                   // Botão Voltar
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2C4747),
+                      color: AppColors.primary,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: TextButton(
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () => _navigateBack(context),
-                      child: const Text(
-                        'Voltar',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
                     ),
                   ),
                   const Spacer(),

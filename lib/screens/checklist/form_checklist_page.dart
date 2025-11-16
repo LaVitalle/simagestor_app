@@ -21,6 +21,7 @@ class _FormChecklistPageState extends State<FormChecklistPage> {
     List<Map<String, dynamic>> veiculos = [];
     List<Map<String, dynamic>> motoristas = [];
     bool isLoadingData = true;
+    bool _isSavingChecklist = false;
 
     final Map<String, bool?> campos = {
         'freios': null,
@@ -193,11 +194,20 @@ class _FormChecklistPageState extends State<FormChecklistPage> {
         );
     }
 
-    void _salvarChecklist() async {
+    Future<void> _salvarChecklist() async {
+        if (_isSavingChecklist) return;
+
+        setState(() {
+            _isSavingChecklist = true;
+        });
+
         if (selectedVehicleId == null) {
             ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Selecione um veículo")),
             );
+            setState(() {
+                _isSavingChecklist = false;
+            });
             return;
         }
 
@@ -205,6 +215,9 @@ class _FormChecklistPageState extends State<FormChecklistPage> {
             ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Selecione um motorista")),
             );
+            setState(() {
+                _isSavingChecklist = false;
+            });
             return;
         }
 
@@ -272,6 +285,12 @@ class _FormChecklistPageState extends State<FormChecklistPage> {
                     ),
                 );
             }
+        } finally {
+            if (mounted) {
+                setState(() {
+                    _isSavingChecklist = false;
+                });
+            }
         }
     }
 
@@ -325,11 +344,11 @@ class _FormChecklistPageState extends State<FormChecklistPage> {
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
                             child: Column(
                                 children: [
-                                    // Dropdown Veículo
+                                    // Dropdown Placa do veículo
                                     DropdownButtonFormField<int>(
                                         value: selectedVehicleId,
                                         decoration: InputDecoration(
-                                            labelText: "Veículo",
+                                            labelText: "Placa do veículo",
                                             labelStyle: const TextStyle(color: AppColors.textInput),
                                             filled: true,
                                             fillColor: AppColors.inputBackground,
@@ -429,12 +448,21 @@ class _FormChecklistPageState extends State<FormChecklistPage> {
                                     SizedBox(
                                         width: double.infinity,
                                         child: ElevatedButton(
-                                            onPressed: _salvarChecklist,
+                                            onPressed: _isSavingChecklist ? null : _salvarChecklist,
                                             style: ElevatedButton.styleFrom(
                                                 backgroundColor: AppColors.primary,
                                                 minimumSize: const Size(double.infinity, 50),
                                             ),
-                                            child: const Text("Salvar", style: TextStyle(fontSize: 18, color: Colors.white)),
+                                            child: _isSavingChecklist
+                                                ? const SizedBox(
+                                                    height: 20,
+                                                    width: 20,
+                                                    child: CircularProgressIndicator(
+                                                        strokeWidth: 2,
+                                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                    ),
+                                                )
+                                                : const Text("Salvar", style: TextStyle(fontSize: 18, color: Colors.white)),
                                         ),
                                     ),
 
