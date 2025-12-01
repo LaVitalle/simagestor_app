@@ -7,9 +7,6 @@ void main() {
 
     group('authUser - Cenários de Sucesso', () {
       test('Deve autenticar usuário com credenciais válidas e retornar dados completos', () async {
-        const email = 'usuario@teste.com';
-        const password = 'senha123';
-        const company = 'empresateste';
 
         final mockResponse = {
           'status': 'success',
@@ -81,9 +78,6 @@ void main() {
 
     group('authUser - Cenários de Falha', () {
       test('Deve lançar exceção com credenciais inválidas', () async {
-        const email = 'usuario@teste.com';
-        const password = 'senha_errada';
-        const company = 'empresateste';
 
         expect(
           () async {
@@ -94,9 +88,6 @@ void main() {
       });
 
       test('Deve lançar exceção quando empresa não existe', () async {
-        const email = 'usuario@teste.com';
-        const password = 'senha123';
-        const company = 'empresa_inexistente';
 
         expect(
           () async {
@@ -107,9 +98,6 @@ void main() {
       });
 
       test('Deve lançar exceção em caso de erro de rede', () async {
-        const email = 'usuario@teste.com';
-        const password = 'senha123';
-        const company = 'empresateste';
 
         expect(
           () async {

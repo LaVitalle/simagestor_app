@@ -14,11 +14,19 @@ class DespesaItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String _formatCurrency(double value) {
+      return 'R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}';
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2A2A),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFF404040),
+          width: 1,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -29,7 +37,7 @@ class DespesaItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  despesa.idFormatado,
+                  despesa.placa.isNotEmpty ? 'Placa: ${despesa.placa}' : 'ID: ${despesa.idFormatado}',
                   style: const TextStyle(
                     color: AppColors.text,
                     fontSize: 16,
@@ -37,10 +45,22 @@ class DespesaItem extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  despesa.dataHoraFormatada,
-                  style: const TextStyle(color: AppColors.text, fontSize: 14),
+                  'Valor: ${_formatCurrency(despesa.valor)}',
+                  style: const TextStyle(
+                    color: AppColors.text,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              despesa.dataHoraFormatada,
+              style: const TextStyle(
+                color: AppColors.text,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 12),
             Center(

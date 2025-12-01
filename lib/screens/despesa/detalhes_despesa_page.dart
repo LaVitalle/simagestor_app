@@ -46,35 +46,47 @@ class _DetalhesDespesaPageState extends State<DetalhesDespesaPage> {
     return recorrente ? 'Sim' : 'Não';
   }
 
-  Widget _buildDetalheItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: const TextStyle(
-                color: AppColors.text,
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 18,
+        color: AppColors.title,
+        fontWeight: FontWeight.bold,
       ),
+    );
+  }
+
+  Widget _buildDetailRow({
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 2,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 16,
+              color: AppColors.text,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              color: AppColors.title,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -82,30 +94,9 @@ class _DetalhesDespesaPageState extends State<DetalhesDespesaPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ),
-        title: const Text(
-          'Simagestor',
-          style: TextStyle(
-            color: AppColors.title,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+      body: SafeArea(
+        child: _buildContent(),
       ),
-      body: _buildContent(),
     );
   }
 
@@ -166,48 +157,159 @@ class _DetalhesDespesaPageState extends State<DetalhesDespesaPage> {
       );
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ID da despesa
-          Center(
+    final despesa = _despesa!;
+
+    return Column(
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              // Botão Voltar
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+              const Spacer(),
+              // Título Simagestor
+              const Text(
+                'Simagestor',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.title,
+                ),
+              ),
+              const Spacer(),
+              // Espaço para balancear o layout
+              const SizedBox(width: 80),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Placa ou ID
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Align(
+            alignment: Alignment.centerLeft,
             child: Text(
-              _despesa!.idFormatado,
+              despesa.placa.isNotEmpty ? despesa.placa : 'ID: ${despesa.idFormatado}',
               style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
-                letterSpacing: 2,
+                color: AppColors.title,
               ),
             ),
           ),
+        ),
 
-          const SizedBox(height: 40),
+        const SizedBox(height: 8),
 
-          // Detalhes da despesa
-          _buildDetalheItem('Data da despesa', _despesa!.dataHoraFormatada),
-
-          _buildDetalheItem(
-            'Valor da despesa',
-            _formatarValor(_despesa!.valor),
+        // Data
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              despesa.dataHoraFormatada,
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppColors.text,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
           ),
+        ),
 
-          _buildDetalheItem(
-            'Recorrente',
-            _formatarRecorrente(_despesa!.recorrente),
+        const SizedBox(height: 32),
+
+        // Detalhes da despesa
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionTitle('Informações da Despesa'),
+                const SizedBox(height: 16),
+
+                _buildDetailRow(
+                  label: 'Tipo de despesa:',
+                  value: despesa.tipoDespesa,
+                ),
+
+                const SizedBox(height: 12),
+
+                _buildDetailRow(
+                  label: 'Recorrente:',
+                  value: _formatarRecorrente(despesa.recorrente),
+                ),
+
+                if (despesa.placa.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _buildDetailRow(
+                    label: 'Placa do veículo:',
+                    value: despesa.placa,
+                  ),
+                ],
+
+                if (despesa.observacao.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _buildDetailRow(
+                    label: 'Observação:',
+                    value: despesa.observacao,
+                  ),
+                ],
+
+                const SizedBox(height: 24),
+
+                _buildSectionTitle('Valores'),
+                const SizedBox(height: 16),
+
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C4747),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Valor da despesa:',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        _formatarValor(despesa.valor),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
-
-          _buildDetalheItem('Tipo de despesa', _despesa!.tipoDespesa),
-
-          if (_despesa!.placa.isNotEmpty)
-            _buildDetalheItem('Placa do veículo', _despesa!.placa),
-
-          if (_despesa!.observacao.isNotEmpty)
-            _buildDetalheItem('Observação', _despesa!.observacao),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

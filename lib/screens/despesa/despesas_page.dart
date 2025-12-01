@@ -13,10 +13,8 @@ class DespesasPage extends StatefulWidget {
 
 class _DespesasPageState extends State<DespesasPage> {
   List<Despesa> despesas = [];
-  List<Despesa> despesasFiltradas = [];
   bool isLoading = true;
   String errorMessage = '';
-  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -26,7 +24,6 @@ class _DespesasPageState extends State<DespesasPage> {
 
   @override
   void dispose() {
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -40,7 +37,6 @@ class _DespesasPageState extends State<DespesasPage> {
       final despesasCarregadas = await DespesaService.buscarDespesas();
       setState(() {
         despesas = despesasCarregadas;
-        despesasFiltradas = despesasCarregadas;
         isLoading = false;
       });
     } catch (e) {
@@ -49,22 +45,6 @@ class _DespesasPageState extends State<DespesasPage> {
         isLoading = false;
       });
     }
-  }
-
-  void _filtrarDespesas(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        despesasFiltradas = despesas;
-      } else {
-        despesasFiltradas = despesas.where((despesa) {
-          return despesa.idFormatado.toLowerCase().contains(
-                query.toLowerCase(),
-              ) ||
-              despesa.tipoDespesa.toLowerCase().contains(query.toLowerCase()) ||
-              despesa.observacao.toLowerCase().contains(query.toLowerCase());
-        }).toList();
-      }
-    });
   }
 
   void _visualizarDespesa(Despesa despesa) {
@@ -112,7 +92,7 @@ class _DespesasPageState extends State<DespesasPage> {
           Container(
             margin: const EdgeInsets.only(right: 16),
             child: const Text(
-              'Histórico de despesas',
+              'Despesas',
               style: TextStyle(
                 color: AppColors.title,
                 fontSize: 16,
@@ -124,50 +104,28 @@ class _DespesasPageState extends State<DespesasPage> {
       ),
       body: Column(
         children: [
-          // Barra de pesquisa
-          Container(
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.inputBackground,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _filtrarDespesas,
-              style: const TextStyle(color: AppColors.textInput),
-              decoration: const InputDecoration(
-                hintText: 'Pesquisar',
-                hintStyle: TextStyle(color: AppColors.textInput),
-                prefixIcon: Icon(Icons.search, color: AppColors.textInput),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ),
-
           // Conteúdo principal
           Expanded(child: _buildContent()),
 
           // Botão de nova despesa
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.all(16),
-            child: ElevatedButton(
-              onPressed: _novaDespesa,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+          SafeArea(
+            child: Container(
+              width: double.infinity,
+              margin: const EdgeInsets.all(16),
+              child: ElevatedButton(
+                onPressed: _novaDespesa,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-              ),
-              child: const Text(
-                'Nova despesa',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                child: const Text(
+                  'Nova despesa',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
               ),
             ),
           ),
@@ -220,7 +178,7 @@ class _DespesasPageState extends State<DespesasPage> {
       );
     }
 
-    if (despesasFiltradas.isEmpty) {
+    if (despesas.isEmpty) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -251,9 +209,9 @@ class _DespesasPageState extends State<DespesasPage> {
       backgroundColor: AppColors.background,
       child: ListView.builder(
         padding: const EdgeInsets.only(bottom: 16),
-        itemCount: despesasFiltradas.length,
+        itemCount: despesas.length,
         itemBuilder: (context, index) {
-          final despesa = despesasFiltradas[index];
+          final despesa = despesas[index];
           return DespesaItem(
             despesa: despesa,
             onVisualizar: () => _visualizarDespesa(despesa),

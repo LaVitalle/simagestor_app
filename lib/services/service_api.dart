@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:simagestor_app/services/service_local_database.dart';
 
 class ServiceApi {
@@ -31,11 +32,11 @@ class ServiceApi {
       
       if (configs.isNotEmpty) {
         final config = configs.first;
-        this.url = config['url_empresa'];
-        this.token = config['token'];
+        url = config['url_empresa'];
+        token = config['token'];
       }
     } catch (e) {
-      print("Erro ao carregar configurações: $e");
+      debugPrint("Erro ao carregar configurações: $e");
     }
   }
 
@@ -103,15 +104,28 @@ class ServiceApi {
 
   Future<T> postFormDataWithAuth<T>(String path, Map<String, dynamic> fields) async {
     final formData = FormData.fromMap(fields);
+    final urlCompleta = _buildPath(path);
+    
+    debugPrint("POST FormData para: $urlCompleta");
+    debugPrint("Campos: $fields");
 
-    final response = await _dio.post<T>(
-      _buildPath(path),
-      data: formData,
-      options: Options(
-        headers: {"Authorization": "Bearer $token"},
-      ),
-    );
-    return response.data as T;
+    try {
+      final response = await _dio.post<T>(
+        urlCompleta,
+        data: formData,
+        options: Options(
+          headers: {"Authorization": "Bearer $token"},
+        ),
+      );
+      return response.data as T;
+    } catch (e) {
+      if (e is DioException) {
+        debugPrint("Erro na API (postFormDataWithAuth): ${e.response?.statusCode}");
+        debugPrint("Resposta da API: ${e.response?.data}");
+        debugPrint("Headers da resposta: ${e.response?.headers}");
+      }
+      rethrow;
+    }
   }
 
   Future<T> postJsonWithAuth<T>(String path, Map<String, dynamic> body) async {
@@ -132,7 +146,7 @@ class ServiceApi {
       return response.data as T;
     } catch (e) {
       if (e is DioException) {
-        print("Erro na API: ${e.response?.statusCode} - ${e.response?.data}");
+        debugPrint("Erro na API: ${e.response?.statusCode} - ${e.response?.data}");
       }
       rethrow;
     }

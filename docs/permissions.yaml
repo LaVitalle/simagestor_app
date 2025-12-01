@@ -1,0 +1,36 @@
+app:
+  id: com.simagestor.app
+  name: Simagestor App
+
+permissions:
+  - name: android.permission.INTERNET
+    type: normal
+    feature: Comunicação com o servidor para autenticação e sincronização de dados do app (checklists, despesas, abastecimentos etc.)
+    data_min: Dados necessários para login e sincronização (checklists, despesas, abastecimentos, configurações), além do status de conexão
+    request_timing: Desde o primeiro uso online/autenticação (permissão só no Manifest, sem prompt em tempo de execução)
+    rationale: Necessário para que o app faça login no servidor e envie/receba dados de todos os módulos (checklists, despesas, abastecimentos, cadastros), mantendo as informações atualizadas
+    alternative: Uso limitado offline, salvando dados localmente e sincronizando posteriormente quando houver internet
+    storage: Dados armazenados localmente apenas até a sincronização; após envio, seguem retenção mínima definida no backend; toda comunicação de rede é feita por HTTPS
+    play_policy: Política de Dados do Usuário (Google Play); descrever claramente na página do app que há comunicação com servidor para login e sincronização de dados
+
+  - name: android.permission.ACCESS_NETWORK_STATE
+    type: normal
+    feature: Verificar o estado da conexão de rede para decidir entre modo online e modo offline
+    data_min: Informações sobre se o dispositivo está conectado e o tipo de conexão (Wi‑Fi/dados móveis), sem identificar redes ou usuários
+    request_timing: Desde o primeiro uso do app (permissão só no Manifest, sem prompt em tempo de execução)
+    rationale: Necessário para que o app saiba se pode sincronizar dados com o servidor ou deve operar em modo offline, evitando erros de rede para o usuário
+    alternative: Considerar que pode não haver conexão e manter o app utilizável offline, apenas exibindo mensagens quando a sincronização falhar
+    storage: O estado de rede é consultado em tempo real e não é armazenado; não há retenção de histórico de conexões
+    play_policy: Política de Dados do Usuário (Google Play); descrever que o app consulta o estado da rede apenas para habilitar sincronização e modo offline
+
+  - name: android.permission.CAMERA
+    type: dangerous
+    feature: Capturar evidências fotográficas para os checklists
+    data_min: Imagem capturada naquele momento, evitando coletar metadados desnecessários
+    request_timing: Em contexto, quando o usuário toca em “adicionar/anexar foto” em um item do checklist
+    rationale: Permite ao usuário registrar evidências visuais das inspeções, aumentando rastreabilidade e prova das verificações
+    alternative: Se o usuário negar a permissão, ele ainda consegue preencher e enviar o checklist, mas a funcionalidade de anexar foto fica indisponível
+    storage: Imagens usadas apenas para o checklist; acesso restrito; retenção mínima; sem uso para analytics/ads; envio protegido (HTTPS)
+    play_policy: Política de Dados do Usuário (Google Play) e seção de permissões de câmera; declarar uso de câmera no Play Console, se exigido
+
+

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:simagestor_app/models/despesa.dart';
 import 'package:simagestor_app/services/despesa_service.dart';
+import 'package:simagestor_app/services/service_local_database.dart';
 import 'package:simagestor_app/themes/app_colors.dart';
 
 class FormDespesasPage extends StatefulWidget {
@@ -21,6 +22,12 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
   String? _tipoDespesaSelecionado;
   String? _recorrenteSelecionado;
   bool _isLoading = false;
+  int _observacaoCaracteres = 0;
+
+  // Veículos para seleção de placa
+  List<Map<String, dynamic>> _veiculos = [];
+  int? _veiculoSelecionadoId;
+  bool _carregandoVeiculos = true;
 
   final List<String> _tiposDespesa = [
     'Pedágio',
@@ -41,10 +48,34 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
   void initState() {
     super.initState();
     _dataController.text = _formatarData(DateTime.now());
+    _observacaoController.addListener(_atualizarContadorObservacao);
+    _carregarVeiculos();
+  }
+
+  Future<void> _carregarVeiculos() async {
+    try {
+      final db = ServiceLocalDatabase.instance;
+      final veiculosList = await db.getAllVeiculos();
+      setState(() {
+        _veiculos = veiculosList;
+        _carregandoVeiculos = false;
+      });
+    } catch (_) {
+      setState(() {
+        _carregandoVeiculos = false;
+      });
+    }
+  }
+
+  void _atualizarContadorObservacao() {
+    setState(() {
+      _observacaoCaracteres = _observacaoController.text.length;
+    });
   }
 
   @override
   void dispose() {
+    _observacaoController.removeListener(_atualizarContadorObservacao);
     _placaController.dispose();
     _dataController.dispose();
     _valorController.dispose();
@@ -52,16 +83,32 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
     super.dispose();
   }
 
-  String _formatarData(DateTime data) {
-    return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
-  }
+String _formatarData(DateTime data) {
+  return '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
+}
 
-  String? _validarPlaca(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Placa do veículo é obrigatória';
+DateTime _parseData(String dataStr) {
+  // Espera formato dd/MM/yyyy vindo do campo de texto
+  try {
+    final partes = dataStr.split('/');
+    if (partes.length == 3) {
+      final dia = int.parse(partes[0]);
+      final mes = int.parse(partes[1]);
+      final ano = int.parse(partes[2]);
+      return DateTime(ano, mes, dia);
     }
-    if (value.trim().length < 7) {
-      return 'Placa deve ter pelo menos 7 caracteres';
+  } catch (_) {
+    // Em caso de erro, retorna a data atual para não quebrar o fluxo
+  }
+  return DateTime.now();
+}
+
+  String? _validarPlacaDropdown(int? value) {
+    if (_carregandoVeiculos) {
+      return 'Carregando veículos...';
+    }
+    if (value == null) {
+      return 'Placa do veículo é obrigatória';
     }
     return null;
   }
@@ -102,8 +149,8 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
   }
 
   String? _validarObservacao(String? value) {
-    if (value != null && value.trim().length > 45) {
-      return 'Observação deve ter no máximo 45 caracteres';
+    if (value != null && value.trim().length > 200) {
+      return 'Observação deve ter no máximo 200 caracteres';
     }
     return null;
   }
@@ -113,20 +160,7 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: AppColors.inputBackground,
-              onSurface: AppColors.textInput,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      lastDate: DateTime(2100),
     );
 
     if (dataSelecionada != null) {
@@ -149,7 +183,7 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
         valor: double.parse(_valorController.text.replaceAll(',', '.')),
         placa: _placaController.text.trim(),
         observacao: _observacaoController.text.trim(),
-        dataHora: DateTime.now(), // Usar data atual por enquanto
+        dataHora: _parseData(_dataController.text),
         recorrente: _recorrenteSelecionado == 'Sim',
         tipoDespesa: _tipoDespesaSelecionado!,
         configuracoesIdUsuario: 1, // ID do usuário atual (mockado)
@@ -277,17 +311,10 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
                   children: [
                     const SizedBox(height: 20),
 
-                    // Placa do veículo
-                    TextFormField(
-                      controller: _placaController,
-                      validator: _validarPlaca,
-                      style: const TextStyle(color: AppColors.textInput),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'[A-Za-z0-9\-]'),
-                        ),
-                        LengthLimitingTextInputFormatter(8),
-                      ],
+                    // Placa do veículo (selecionar veículo)
+                    DropdownButtonFormField<int>(
+                      value: _veiculoSelecionadoId,
+                      isExpanded: true,
                       decoration: InputDecoration(
                         hintText: 'Placa do veículo',
                         hintStyle: const TextStyle(color: AppColors.textInput),
@@ -302,6 +329,31 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
                           vertical: 12,
                         ),
                       ),
+                      dropdownColor: AppColors.inputBackground,
+                      icon: const Icon(Icons.arrow_drop_down, color: AppColors.textInput),
+                      style: const TextStyle(color: AppColors.textInput),
+                      items: _veiculos.map((veiculo) {
+                        final id = veiculo['id'] as int;
+                        final placa = veiculo['placa']?.toString() ?? '';
+                        return DropdownMenuItem<int>(
+                          value: id,
+                          child: Text(
+                            placa,
+                            style: const TextStyle(color: AppColors.textInput),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _veiculoSelecionadoId = value;
+                          final veiculo = _veiculos.firstWhere(
+                            (v) => v['id'] == value,
+                            orElse: () => {},
+                          );
+                          _placaController.text = veiculo['placa']?.toString() ?? '';
+                        });
+                      },
+                      validator: _validarPlacaDropdown,
                     ),
 
                     const SizedBox(height: 16),
@@ -396,12 +448,26 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
 
                     const SizedBox(height: 16),
 
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '$_observacaoCaracteres/200',
+                        style: TextStyle(
+                          color: _observacaoCaracteres > 200
+                              ? Colors.red
+                              : AppColors.textInput.withOpacity(0.6),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
                     // Observação
                     TextFormField(
                       controller: _observacaoController,
                       validator: _validarObservacao,
                       maxLines: 3,
+                      maxLength: 200,
                       style: const TextStyle(color: AppColors.textInput),
+                      inputFormatters: [LengthLimitingTextInputFormatter(200)],
                       decoration: InputDecoration(
                         hintText: 'Observação',
                         hintStyle: const TextStyle(color: AppColors.textInput),
@@ -412,47 +478,54 @@ class _FormDespesasPageState extends State<FormDespesasPage> {
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.all(16),
+                        counterText: '', // Remove o contador padrão
                       ),
                     ),
 
-                    const SizedBox(height: 40),
-                  ],
-                ),
-              ),
-            ),
+                    const SizedBox(height: 32),
 
-            // Botão Salvar
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.all(16),
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _salvarDespesa,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
+                    // Botão Salvar
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _salvarDespesa,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                      )
-                    : const Text(
-                        'Salvar',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Text(
+                                'Salvar',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                       ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Contador de caracteres da observação
+                    
+
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
             ),
           ],

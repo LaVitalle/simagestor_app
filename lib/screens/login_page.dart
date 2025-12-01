@@ -21,6 +21,34 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController companyController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    checkIfAlreadyLogged();
+  }
+
+  Future<void> checkIfAlreadyLogged() async {
+    ServiceLocalDatabase db = ServiceLocalDatabase.instance;
+
+    final configs = await db.getAllConfiguracoes();
+
+    if (configs.isNotEmpty) {
+      final config = configs.first;
+
+      final token = config['token'];
+      final expString = config['data_expiracao'];
+
+      if (token != null && expString != null) {
+        final expDate = DateTime.parse(expString);
+
+        if (DateTime.now().isBefore(expDate)) {
+          Navigator.pushReplacementNamed(context, '/home');
+          return;
+        }
+      }
+    }
+  }
+
   Future<void> handleLogin() async {
     if (_formKey.currentState!.validate()) {
       String email = emailController.text.trim();
@@ -49,7 +77,7 @@ class _LoginPageState extends State<LoginPage> {
         final configuracao = {
           'id_usuario': userId,
           'url_empresa': 'https://$company.simagestor.com.br/api',
-          'data_expiracao': DateTime.now().add(Duration(seconds: 30)).toIso8601String(),
+          'data_expiracao': DateTime.now().add(Duration(days: 7)).toIso8601String(),
           'token': token,
           'isAdmin': isAdmin ? 1 : 0,
         };
@@ -62,7 +90,13 @@ class _LoginPageState extends State<LoginPage> {
           await database.updateConfiguracao(userId, configuracao);
         }
 
-        Navigator.pushNamed(context, '/home');
+        // Sincroniza veículos e motoristas da API
+        debugPrint('Sincronizando veículos e motoristas...');
+        await database.syncVeiculosEMotoristasFromAPI();
+
+        if (mounted) {
+          Navigator.pushNamed(context, '/home');
+        }
 
       } catch (e) {
         setState(() {

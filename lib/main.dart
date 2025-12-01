@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:simagestor_app/screens/checklist/checklists_page.dart';
+import 'package:simagestor_app/screens/checklist/detalhes_checklist_page.dart';
+import 'package:simagestor_app/screens/checklist/form_checklist_page.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:simagestor_app/screens/login_page.dart';
 import 'package:simagestor_app/screens/home_page.dart';
@@ -9,10 +12,18 @@ import 'package:simagestor_app/models/fuel.dart';
 import 'package:simagestor_app/screens/despesa/despesas_page.dart';
 import 'package:simagestor_app/screens/despesa/form_despesas_page.dart';
 import 'package:simagestor_app/screens/despesa/detalhes_despesa_page.dart';
+import 'dart:io' show Platform;
 
 void main() {
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Apenas inicializar FFI em desktop (Windows, Linux, macOS)
+  // Android e iOS usam a implementação nativa do sqflite
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+  
   runApp(const MyApp());
 }
 
@@ -29,6 +40,7 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         '/': (context) => const LoginPage(),
+        '/login': (context) => const LoginPage(),
         '/home': (context) => const HomePage(),
         '/fuel': (context) => const FuelPage(),
         '/new-fueling': (context) => const NewFuelingPage(),
@@ -45,6 +57,15 @@ class MyApp extends StatelessWidget {
           final idDespesa = args?['idDespesa'] as int? ?? 0;
           return DetalhesDespesaPage(idDespesa: idDespesa);
         },
+        '/checklists': (context) => ChecklistPage(),
+        '/detalhes-checklist': (context) {
+          final args =
+              ModalRoute.of(context)?.settings.arguments
+                  as Map<String, dynamic>?;
+          final idChecklist = args?['idChecklist'] as int? ?? 0;
+          return DetalhesChecklistPage(idChecklist: idChecklist);
+        },
+        '/form-checklist': (context) => FormChecklistPage(),
       },
     );
   }

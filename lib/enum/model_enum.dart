@@ -21,13 +21,13 @@ extension ModelExtension on Model {
   String get api {
     switch (this) {
       case Model.checklist:
-        return "api_checklist";
+        return "api_checklist.php";
 
       case Model.despesa:
-        return "api_despesa";
+        return "api_despesas.php";
 
       case Model.combustivel:
-        return "api_abastecimento";
+        return "api_abastecimento.php";
     }
   }
 }

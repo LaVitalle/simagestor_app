@@ -13,9 +13,7 @@ class FuelPage extends StatefulWidget {
 }
 
 class _FuelPageState extends State<FuelPage> {
-  final TextEditingController _searchController = TextEditingController();
   List<FuelModel> _fuelRecords = [];
-  List<FuelModel> _filteredRecords = [];
 
   @override
   void initState() {
@@ -37,23 +35,7 @@ class _FuelPageState extends State<FuelPage> {
         total: (item['total_RS'] is double) ? item['total_RS'] : double.tryParse(item['total_RS']?.toString() ?? '') ?? 0.0,
       );
     }).toList();
-    setState(() {
-      _filteredRecords = List.from(_fuelRecords);
-    });
-  }
-
-  void _filterRecords(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filteredRecords = List.from(_fuelRecords);
-      } else {
-        _filteredRecords = _fuelRecords.where((record) {
-          return record.id.toLowerCase().contains(query.toLowerCase()) ||
-                 record.plate.toLowerCase().contains(query.toLowerCase()) ||
-                 record.fuel.toLowerCase().contains(query.toLowerCase());
-        }).toList();
-      }
-    });
+    setState(() {});
   }
 
   void _navigateBack() {
@@ -83,187 +65,177 @@ class _FuelPageState extends State<FuelPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: _navigateBack,
+          ),
+        ),
+        title: const Text(
+          'Simagestor',
+          style: TextStyle(
+            color: AppColors.title,
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            child: const Text(
+              'Abastecimentos',
+              style: TextStyle(
+                color: AppColors.title,
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Conteúdo principal
+          Expanded(
+            child: _buildContent(),
+          ),
+          
+          // Botão de novo abastecimento
+          SafeArea(
+            child: Container(
+              width: double.infinity,
+              margin: const EdgeInsets.all(16),
+              child: ElevatedButton(
+                onPressed: _newFueling,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Novo abastecimento',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_fuelRecords.isEmpty) {
+      return const Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Color(0xFF2C4747),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: TextButton(
-                      onPressed: _navigateBack,
-                      child: Text(
-                        'Voltar',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Spacer(),
-                  Text(
-                    'Simagestor',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.title,
-                    ),
-                  ),
-                  Spacer(),
-                  SizedBox(width: 80),
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Últimos 5 abastecimentos',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.title,
-                  ),
-                ),
-              ),
-            ),
+            Icon(Icons.local_gas_station_outlined, color: AppColors.text, size: 64),
             SizedBox(height: 16),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xFF2C2C2C),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: _filterRecords,
-                  style: TextStyle(color: AppColors.textInput),
-                  decoration: InputDecoration(
-                    hintText: 'Pesquisar',
-                    hintStyle: TextStyle(color: Color(0xFFA0A0A0)),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                  ),
-                ),
+            Text(
+              'Nenhum abastecimento encontrado',
+              style: TextStyle(
+                color: AppColors.text,
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            SizedBox(height: 16),
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                itemCount: _filteredRecords.length,
-                itemBuilder: (context, index) {
-                  final record = _filteredRecords[index];
-                  return Container(
-                    margin: EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      border: Border.all(
-                        color: Color(0xFF404040),
-                        width: 1,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Placa: ${record.plate}',
-                                style: TextStyle(
-                                  color: AppColors.text,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Text(
-                                'Valor: R\$ ${record.total.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  color: AppColors.text,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Data: ${record.date.day.toString().padLeft(2, '0')}/${record.date.month.toString().padLeft(2, '0')}/${record.date.year} ${record.date.hour.toString().padLeft(2, '0')}:${record.date.minute.toString().padLeft(2, '0')}',
-                            style: TextStyle(
-                              color: AppColors.text,
-                              fontSize: 14,
-                            ),
-                          ),
-                          SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () => _viewRecord(record),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Color(0xFF00796B),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                              ),
-                              child: Text(
-                                'Visualizar',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _newFueling,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF00796B),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: Text(
-                    'Novo abastecimento',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
+            SizedBox(height: 8),
+            Text(
+              'Adicione seu primeiro abastecimento',
+              style: TextStyle(color: AppColors.text, fontSize: 14),
             ),
           ],
         ),
-      ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      itemCount: _fuelRecords.length,
+      itemBuilder: (context, index) {
+        final record = _fuelRecords[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            border: Border.all(
+              color: const Color(0xFF404040),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Placa: ${record.plate}',
+                      style: const TextStyle(
+                        color: AppColors.text,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      'Valor: R\$ ${record.total.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        color: AppColors.text,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Data: ${record.date.day.toString().padLeft(2, '0')}/${record.date.month.toString().padLeft(2, '0')}/${record.date.year} ${record.date.hour.toString().padLeft(2, '0')}:${record.date.minute.toString().padLeft(2, '0')}',
+                  style: const TextStyle(
+                    color: AppColors.text,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => _viewRecord(record),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                    child: const Text(
+                      'Visualizar',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

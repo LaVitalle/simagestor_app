@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import '../lib/services/service_local_database.dart';
+import 'package:simagestor_app/services/service_local_database.dart';
 
 void main() {
   setUpAll(() {

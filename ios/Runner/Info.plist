@@ -45,5 +45,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+<!--necessário para a app store permitir o app na loja-->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>The gallery is necessary to fulfill the application functions to check the states of non-compliance with the basic functions for the basic operation of the car in the checklist.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>The camera is necessary to fulfill the application functions to check the states of non-compliance with the basic functions for the basic operation of the car in the checklist.</string>
+
 </dict>
 </plist>
