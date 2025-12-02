@@ -28,7 +28,7 @@ class _FuelPageState extends State<FuelPage> {
         id: item['id_abastecimento'].toString(),
         plate: item['placa'] ?? '',
         date: DateTime.tryParse(item['data_hora'] ?? '') ?? DateTime.now(),
-        km: (item['km'] is int) ? item['km'] : int.tryParse(item['km']?.toString() ?? '') ?? 0,
+        km: (item['km'] is num) ? (item['km'] as num).toInt() : int.tryParse(item['km']?.toString() ?? '') ?? 0,
         fuel: item['combustivel'] ?? '',
         valuePerLiter: (item['valor_por_litro'] is double) ? item['valor_por_litro'] : double.tryParse(item['valor_por_litro']?.toString() ?? '') ?? 0.0,
         liters: (item['litros_abastecidos'] is double) ? item['litros_abastecidos'] : double.tryParse(item['litros_abastecidos']?.toString() ?? '') ?? 0.0,
